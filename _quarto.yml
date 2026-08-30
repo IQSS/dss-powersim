@@ -18,8 +18,8 @@ project:
 
 website:
   title: "Simulation-Based Power Analysis"
-  site-url: https://stevenworthington.github.io/dss-powersim/
-  repo-url: https://github.com/stevenworthington/dss-powersim
+  site-url: https://iqss.github.io/dss-powersim/
+  repo-url: https://github.com/IQSS/dss-powersim
   page-navigation: true
   sidebar:
     style: floating

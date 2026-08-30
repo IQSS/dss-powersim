@@ -3,7 +3,7 @@
 Simulation-Based Power Analysis: a guide to power analysis by simulation
 for mixed effects models, in R, Python, and Stata, with one worked design
 (participants rating songs of two genres) carried through all three. Live
-at https://stevenworthington.github.io/dss-powersim/. Written 2023 by Steve
+at https://iqss.github.io/dss-powersim/. Written 2023 by Steve
 Worthington and Dan Yuan (IQSS), with feedback from Jinjie Liu and Noah
 Greifer; moved from bookdown to Quarto on the `dss-theme` extension in
 2026, every chunk on the three implementation pages executed and frozen.
