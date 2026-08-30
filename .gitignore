@@ -13,3 +13,9 @@
 /profile.do
 /stata*.do
 /stata*.log
+
+# Working notes kept on the maintainer's machine, never committed
+AGENTS.md
+CLAUDE.md
+STATUS.md
+TASKS.md
