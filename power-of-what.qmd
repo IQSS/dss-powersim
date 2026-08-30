@@ -41,19 +41,19 @@ where the subscripts $i$ and $j$ denote individual songs and participants, respe
 #| echo: false
 #| results: "asis"
 tibble::tribble(~`model`, ~`code`, ~`description`,
-        "$\\textrm{liking}_{ij}$", "$\\texttt{liking_ij}$", "rating of song $i$ for participant $j$ on the interval [0, 100]",
-        "$\\textrm{genre}_i$", "$\\texttt{genre_i}$", "genre of song $i$ (0='pop', 1='rock')",
-        "$\\beta_0$", "$\\texttt{beta_0}$", "intercept; mean of liking rating for 'pop' genre",
-        "$\\beta_1$", "$\\texttt{beta_1}$", "slope; mean difference btw 'pop' and 'rock' song ratings",
-        "$\\tau_0$", "$\\texttt{tau_0}$", "standard deviation of by-subject random intercepts",
-        "$\\tau_1$", "$\\texttt{tau_1}$", "standard deviation of by-subject random slopes",        
-        "$\\rho$", "$\\texttt{rho}$", "correlation between by-subject random intercepts and slopes",
-        "$\\omega_0$", "$\\texttt{omega_0}$", "standard deviation of by-song random intercepts",
-        "$\\sigma$", "$\\texttt{sigma}$", "standard deviation of residuals",
-        "$T_{0j}$", "$\\texttt{T_0j}$", "random intercept for subject $j$",
-        "$T_{1j}$", "$\\texttt{T_1j}$", "random slope for subject $j$",
-        "$O_{0i}$", "$\\texttt{O_0i}$", "random intercept for song $i$",
-        "$e_{ij}$", "$\\texttt{e_ij}$", "residual of song $i$ for participant $j$") %>%
+        "$\\textrm{liking}_{ij}$", "`liking_ij`", "rating of song $i$ for participant $j$ on the interval [0, 100]",
+        "$\\textrm{genre}_i$", "`genre_i`", "genre of song $i$ (0='pop', 1='rock')",
+        "$\\beta_0$", "`beta_0`", "intercept; mean of liking rating for 'pop' genre",
+        "$\\beta_1$", "`beta_1`", "slope; mean difference btw 'pop' and 'rock' song ratings",
+        "$\\tau_0$", "`tau_0`", "standard deviation of by-subject random intercepts",
+        "$\\tau_1$", "`tau_1`", "standard deviation of by-subject random slopes",        
+        "$\\rho$", "`rho`", "correlation between by-subject random intercepts and slopes",
+        "$\\omega_0$", "`omega_0`", "standard deviation of by-song random intercepts",
+        "$\\sigma$", "`sigma`", "standard deviation of residuals",
+        "$T_{0j}$", "`T_0j`", "random intercept for subject $j$",
+        "$T_{1j}$", "`T_1j`", "random slope for subject $j$",
+        "$O_{0i}$", "`O_0i`", "random intercept for song $i$",
+        "$e_{ij}$", "`e_ij`", "residual of song $i$ for participant $j$") %>%
   apa_table(align = c("l", "l", "l"),
             caption = "Variables in the data-generating model and associated code-based names.",
             escape = FALSE,
@@ -75,13 +75,13 @@ Finally, we need to establish the data-generating parameters in the model. You m
 #| echo: false
 #| results: "asis"
 tibble::tribble(~`code`, ~`value`, ~`description`,
-        "$\\texttt{beta_0}$", "60", "intercept; i.e., mean of liking rating for 'pop' genre",
-        "$\\texttt{beta_1}$", "5", "slope; i.e, mean difference btw 'pop' and 'rock' song ratings",
-        "$\\texttt{tau_0}$", "7", "by-subject random intercept sd",
-        "$\\texttt{tau_1}$", "4", "by-subject random slope sd",
-        "$\\texttt{rho}$", "0.2", "correlation between intercept and slope",
-        "$\\texttt{omega_0}$", "3", "by-song random intercept sd",
-        "$\\texttt{sigma}$", "8", "residual (error) sd") %>%
+        "`beta_0`", "60", "intercept; i.e., mean of liking rating for 'pop' genre",
+        "`beta_1`", "5", "slope; i.e, mean difference btw 'pop' and 'rock' song ratings",
+        "`tau_0`", "7", "by-subject random intercept sd",
+        "`tau_1`", "4", "by-subject random slope sd",
+        "`rho`", "0.2", "correlation between intercept and slope",
+        "`omega_0`", "3", "by-song random intercept sd",
+        "`sigma`", "8", "residual (error) sd") %>%
   apa_table(align = c("l", "l", "l"),
             caption = "Settings for all data-generating parameters.",
             escape = FALSE,
