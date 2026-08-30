@@ -1,0 +1,44 @@
+# Simulation-Based Power Analysis (dss-powersim): a Quarto website on the dss-theme extension (quarto add IQSS/dss-theme).
+# Pages named after the 2023 bookdown pages, so every old address still answers (the empty Software Comparison
+# page is not carried). Three engines: the R and Stata pages run under knitr (Statamarkdown registers the stata
+# engine and runs Stata MP in batch), the Python page under Jupyter on the repository's uv venv (_environment).
+# Every executed chunk is frozen; CI renders from _freeze/ with no R, Python, or Stata.
+project:
+  type: dss-theme
+  output-dir: _site
+  render:
+    - index.qmd
+    - power-analysis.qmd
+    - simulation.qmd
+    - power-of-what.qmd
+    - r.qmd
+    - python.qmd
+    - stata.qmd
+    - resources.qmd
+
+website:
+  title: "Simulation-Based Power Analysis"
+  site-url: https://stevenworthington.github.io/dss-powersim/
+  repo-url: https://github.com/stevenworthington/dss-powersim
+  page-navigation: true
+  sidebar:
+    style: floating
+    search: true
+    contents:
+      - { href: index.qmd, text: "Introduction" }
+      - section: "Concepts"
+        contents:
+          - power-analysis.qmd
+          - simulation.qmd
+      - section: "Preparation"
+        contents:
+          - power-of-what.qmd
+      - section: "Implementation"
+        contents:
+          - r.qmd
+          - python.qmd
+          - stata.qmd
+      - resources.qmd
+
+execute:
+  freeze: auto

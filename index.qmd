@@ -1,0 +1,26 @@
+---
+title: "Simulation-Based Power Analysis"
+description: "A quick-start guide to simulation-based power analysis for mixed effects models, in R, Python, and Stata"
+---
+
+## Introduction
+
+This tutorial is designed to be a quick-start guide for conducting simulation-based power analyses in R, Python, and Stata. We focus particularly on power for mixed effects models, but the principles employed can be repurposed for any model and study design. The tutorial is suitable for anyone with a intermediate understanding of mixed effects models and coding in either R, Python, or Stata.
+
+While high-level packages exist in some of these languages for conducting simulation-based power analysis (e.g., the R packages [`{simr}`](https://cran.r-project.org/web/packages/simr/vignettes/fromscratch.html), [`{longpower}`](https://cran.r-project.org/web/packages/longpower/vignettes/longpower.html), and [`{simglm}`](https://cran.r-project.org/web/packages/simglm/vignettes/tidy_simulation.html)), such packages abstract away the details of conducting simulations and thus are best used after gaining an understanding of the power simulation process. In addition, rolling your own simulations from scratch provides much more flexibility to tackle different study designs and models - and it's fun!
+
+Suggestions and feedback are welcome: use the Request help button at the top of the page.
+
+### Table of Contents
+
+1. [Canned Power Analysis](power-analysis.qmd)
+2. [Simulation-based Power Analysis](simulation.qmd)
+3. [Power of What?](power-of-what.qmd)
+4. [R Examples](r.qmd)
+5. [Python Examples](python.qmd)
+6. [Stata Examples](stata.qmd)
+7. [Resources](resources.qmd)
+
+### Contributors
+
+The contents of this tutorial are the result of a collaborative effort from members of the [Data Science Services](https://www.iq.harvard.edu/data-science-services) team at the Institute for Quantitative Social Science at Harvard University. The main contributors are Steve Worthington and Dan Yuan, with additional feedback from Jinjie Liu and Noah Greifer.

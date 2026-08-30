@@ -1,7 +1,0 @@
-
-
-
-# (PART) Appendix {-}
-
-# Software Comparison 
-

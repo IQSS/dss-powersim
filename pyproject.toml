@@ -1,0 +1,15 @@
+[project]
+name = "dss-powersim"
+version = "0.1.0"
+description = "Python environment for the guide's Python page: Quarto's Jupyter engine executes it here and the outputs are frozen."
+requires-python = ">=3.14"
+dependencies = [
+  "jupyter",
+  "ipykernel",
+  "numpy",
+  "pandas",
+  "statsmodels",
+  "seaborn",
+  "matplotlib",
+  "dask[distributed]",
+]

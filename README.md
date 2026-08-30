@@ -1,34 +1,29 @@
-# Power Simulation
-![](https://travis-ci.org/IQSS/dss-template.svg?branch=master) [![Github All Releases](https://img.shields.io/github/downloads/IQSS/dss-template/total.svg)]()
+# dss-powersim
 
-## Media
-View this tutorial/workshop via a:
-* [browser](https://iqss.github.io/dss-template/)
-* [PDF](https://github.com/IQSS/dss-template/blob/gh-pages/template.pdf)
-* [EPUB](https://github.com/IQSS/dss-template/blob/gh-pages/template.epub)
+Simulation-Based Power Analysis: a guide to power analysis by simulation
+for mixed effects models, in R, Python, and Stata, with one worked design
+(participants rating songs of two genres) carried through all three. Live
+at https://stevenworthington.github.io/dss-powersim/. Written 2023 by Steve
+Worthington and Dan Yuan (IQSS), with feedback from Jinjie Liu and Noah
+Greifer; moved from bookdown to Quarto on the `dss-theme` extension in
+2026, every chunk on the three implementation pages executed and frozen.
 
-## Aim
-To provide a boilerplate repo to start a new tutorial/workshop.
+## Build
 
-## Contents
-This repo contains boilerplate configuration files and Rmarkdown files necessary for creating a new tutorial/workshop. These files relate to:
+`quarto preview` or `quarto render`. The executed chunks are frozen in
+`_freeze/`; every push to `main` publishes the site to `gh-pages`
+(`.github/workflows/publish.yml`), rendering from the freeze with no R,
+Python, or Stata on the runner. Re-executing a page needs:
 
-* bookdown: *index.Rmd, 01_chapter.Rmd, _bookdown.yml, _output.yml, _build.sh, preamble.tex, style.css, .nojekyll*
-* continuous integration: *.travis.yml, DESCRIPTION*
-* R: *dss-template.Rproj*
-* GitHub: *LICENSE*
-* Git: *.gitignore, template.gitignore*
-
-## Set-up
-1. Click on the green button **Use this template** to [create a new remote repo from this template](https://help.github.com/en/articles/creating-a-repository-from-a-template)
-2. Set up a continuous integration (CI) provider ([Travis CI](https://docs.travis-ci.com/user/tutorial/), or [AppVeyor](https://www.appveyor.com/docs/)). This involves:
-    + linking the CI provider to your GitHub account.
-    + creating a GutHub personal access token (e.g., 'GITHUB_PAT') and associate this with the repo within the CI provider.
-    + activating CI for the new remote repo.
-3. Clone the remote repo to a local directory.
-4. Add content to the Rmarkdown files locally. When this is pushed to the remote, the CI provider will build and deploy the GitHub pages website, pdf, and epub formats of the tutorial/workshop.
+- R with the packages in `renv.lock` (`renv::restore()`): the R page and
+  the tables on the Power of What? page.
+- Python through uv (`uv sync`; `_environment` points Quarto at `.venv`):
+  the Python page.
+- Stata on the machine: the Stata page. Statamarkdown finds it and runs
+  each chunk in batch, replaying the chunks before it; the `violinplot`
+  needs the five SSC packages the page's first block installs.
 
 ## Contributing
-This material is maintained under a GPL License, and other individuals are welcome to fork, clone, or make copies of the material. Comments and suggestions are also always welcome.
 
-![](images/readme-license.png)
+GPL-3.0 (`LICENSE`). Comments and suggestions through the Request help
+button on every page.
