@@ -1,6 +1,10 @@
 ---
 title: "Simulation-Based Power Analysis"
 description: "A quick-start guide to simulation-based power analysis for mixed effects models, in R, Python, and Stata"
+author:
+  - "Steve Worthington"
+  - "Dan Yuan"
+date: "last-modified"
 ---
 
 ## Introduction
