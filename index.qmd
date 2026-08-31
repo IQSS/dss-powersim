@@ -27,4 +27,4 @@ Suggestions and feedback are welcome: use the Request help button at the top of 
 
 ### Contributors
 
-The contents of this tutorial are the result of a collaborative effort from members of the [Data Science Services](https://www.iq.harvard.edu/data-science-services) team at the Institute for Quantitative Social Science at Harvard University. The main contributors are Steve Worthington and Dan Yuan, with additional feedback from Jinjie Liu and Noah Greifer.
+A collaborative effort from the [Data Science Services](https://www.iq.harvard.edu/data-science-services) team at the Institute for Quantitative Social Science, Harvard University, with feedback from Jinjie Liu and Noah Greifer.
