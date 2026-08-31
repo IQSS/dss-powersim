@@ -556,7 +556,7 @@ window.Quarto = {
 </section>
 <section id="establish-the-data-generating-parameters" class="level3">
 <h3 class="anchored" data-anchor-id="establish-the-data-generating-parameters">Establish the data-generating parameters</h3>
-<p>The first thing to do is to set up the parameters that govern the process we assume gave rise to the data - the <em>data-generating process</em>, or DGP. We previously decided upon the the data-generating parameters (see <a href="./power-of-what.html">Power of What?</a>), so we just need to code them here.</p>
+<p>The first thing to do is to set up the parameters that govern the process we assume gave rise to the data - the <em>data-generating process</em>, or DGP. We previously decided upon the data-generating parameters (see <a href="./power-of-what.html">Power of What?</a>), so we just need to code them here.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># set all data-generating parameters</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>beta_0  <span class="ot">&lt;-</span>  <span class="dv">60</span>   <span class="co"># intercept; i.e., the grand mean</span></span>
@@ -672,7 +672,7 @@ window.Quarto = {
 </section>
 <section id="simulate-trials" class="level4">
 <h4 class="anchored" data-anchor-id="simulate-trials">Simulate trials</h4>
-<p>Since all subjects rate all songs (i.e., the design is fully crossed) we can set up a table of trials by including every possible combination of the rows in the <code>subjects</code> and <code>songs</code> tables. Each trial has random error associated with it, reflecting fluctuations in trial-by-trial ratings due to unkown factors. We simulate this by sampling values from a univariate normal distribution with a mean of 0 and a standard deviation of <code>sigma</code>.</p>
+<p>Since all subjects rate all songs (i.e., the design is fully crossed) we can set up a table of trials by including every possible combination of the rows in the <code>subjects</code> and <code>songs</code> tables. Each trial has random error associated with it, reflecting fluctuations in trial-by-trial ratings due to unknown factors. We simulate this by sampling values from a univariate normal distribution with a mean of 0 and a standard deviation of <code>sigma</code>.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cross subject and song IDs; add an error term</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>trials <span class="ot">&lt;-</span> <span class="fu">crossing</span>(subjects, songs) <span class="sc">|&gt;</span></span>
@@ -702,7 +702,7 @@ window.Quarto = {
 <p>With this resulting <code>trials</code> table, in combination with the constants <code>beta_0</code> and <code>beta_1</code>, we have the full set of values that we need to compute the response variable <code>liking_ij</code> according the linear model we defined previously (see <a href="./power-of-what.html">Power of What?</a>).</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>dat_sim <span class="ot">&lt;-</span> trials <span class="sc">|&gt;</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">liking_ij =</span> beta_0 <span class="sc">+</span> T_0j <span class="sc">+</span> O_0i <span class="sc">+</span> (beta_1 <span class="sc">+</span> T_1j) <span class="sc">*</span> genre_i <span class="sc">+</span> e_ij) <span class="sc">%&gt;%</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">liking_ij =</span> beta_0 <span class="sc">+</span> T_0j <span class="sc">+</span> O_0i <span class="sc">+</span> (beta_1 <span class="sc">+</span> T_1j) <span class="sc">*</span> genre_i <span class="sc">+</span> e_ij) <span class="sc">|&gt;</span></span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(subj_id, song_id, category, genre_i, liking_ij)</span>
 <span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(dat_sim, <span class="at">n=</span><span class="dv">10</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -799,11 +799,11 @@ genre_i        7.501      1.713 40.857   4.379 8.09e-05 ***
 Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 </div>
 </div>
-<p>We can use the <code>broom.mixed::tidy()</code> function to get a tidy table of the results. This will prove to be super useful later when we need to combine the output from hundreds of simulations to calculate power. We will added columns for <code>parameter</code> and <code>value</code>, so we can compare the estimate from the model to the parameters we used to simulate the data.</p>
+<p>We can use the <code>broom.mixed::tidy()</code> function to get a tidy table of the results. This will prove to be super useful later when we need to combine the output from hundreds of simulations to calculate power. We will add columns for <code>parameter</code> and <code>value</code>, so we can compare the estimate from the model to the parameters we used to simulate the data.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># get a tidy table of results</span></span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>broom.mixed<span class="sc">::</span><span class="fu">tidy</span>(mod_sim) <span class="sc">|&gt;</span></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(is.numeric, round, <span class="dv">3</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.numeric), \(x) <span class="fu">round</span>(x, <span class="dv">3</span>))) <span class="sc">|&gt;</span></span>
 <span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
 <span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">parameter =</span> <span class="fu">c</span>(<span class="st">"beta_0"</span>, <span class="st">"beta_1"</span>, <span class="st">"omega_0"</span>, <span class="st">"tau_0"</span>, <span class="st">"rho"</span>, <span class="st">"tau_1"</span>, <span class="st">"sigma"</span>),</span>
 <span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">value =</span> <span class="fu">c</span>(beta_0, beta_1, omega_0, tau_0, rho, tau_1, sigma),</span>
@@ -965,9 +965,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <h2 class="anchored" data-anchor-id="power-calculation-automated">Power calculation automated</h2>
 <p>To get an accurate estimation of power, we need to run the simulation many times. Here we use the <code>future_map_dfr()</code> function to iterate over a sequence of integers denoting the replications we want to perform.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>sims <span class="ot">&lt;-</span> <span class="fu">future_map_dfr</span>(<span class="dv">1</span><span class="sc">:</span>reps, <span class="sc">~</span> <span class="fu">single_run</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>sims <span class="ot">&lt;-</span> <span class="fu">future_map_dfr</span>(<span class="dv">1</span><span class="sc">:</span>reps, <span class="sc">~</span> <span class="fu">single_run</span>(), <span class="at">.options =</span> <span class="fu">furrr_options</span>(<span class="at">seed =</span> <span class="cn">TRUE</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>We can finally calculate power for our parameter of interest <code>beta_1</code>(denoted in the tidy model output table as the term <code>genre_i</code>) by filtering to keep only that term and the calculating the proportion of times the <span class="math inline">\(p\)</span>-value is below the <code>alpha</code> (0.05) threshold.</p>
+<p>We can finally calculate power for our parameter of interest <code>beta_1</code>(denoted in the tidy model output table as the term <code>genre_i</code>) by filtering to keep only that term and then calculating the proportion of times the <span class="math inline">\(p\)</span>-value is below the <code>alpha</code> (0.05) threshold.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># calculate mean estimates and power for specified alpha</span></span>
 <span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>sims <span class="sc">|&gt;</span></span>
@@ -983,15 +983,15 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <pre><code># A tibble: 1 × 4
   term    mean_estimate mean_se power
   &lt;chr&gt;           &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;
-1 genre_i          5.14    1.45  0.94</code></pre>
+1 genre_i          4.95    1.46   0.9</code></pre>
 </div>
 </div>
 <section id="check-false-positive-rate" class="level3">
 <h3 class="anchored" data-anchor-id="check-false-positive-rate">Check false positive rate</h3>
-<p>We can do a sanity check to see if our simulation is performing as expected by checking the false positive rate (Type I error rate). We set the effect of <code>genre_ij</code> (<code>beta_1</code>) to 0 to calculate the false positive rate, which is the probability of concluding there is an effect when there is no actual effect in the population.</p>
+<p>We can do a sanity check to see if our simulation is performing as expected by checking the false positive rate (Type I error rate). We set the effect of <code>genre_i</code> (<code>beta_1</code>) to 0 to calculate the false positive rate, which is the probability of concluding there is an effect when there is no actual effect in the population.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># run simulations and calculate the false positive rate</span></span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>sims_fp <span class="ot">&lt;-</span> <span class="fu">future_map_dfr</span>(<span class="dv">1</span><span class="sc">:</span>reps, <span class="sc">~</span> <span class="fu">single_run</span>(<span class="at">beta_1 =</span> <span class="dv">0</span>))</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>sims_fp <span class="ot">&lt;-</span> <span class="fu">future_map_dfr</span>(<span class="dv">1</span><span class="sc">:</span>reps, <span class="sc">~</span> <span class="fu">single_run</span>(<span class="at">beta_1 =</span> <span class="dv">0</span>), <span class="at">.options =</span> <span class="fu">furrr_options</span>(<span class="at">seed =</span> <span class="cn">TRUE</span>))</span>
 <span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="co"># calculate mean estimates and power for specified alpha</span></span>
 <span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>sims_fp <span class="sc">|&gt;</span></span>
@@ -1001,7 +1001,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <pre><code># A tibble: 1 × 1
   power
   &lt;dbl&gt;
-1  0.04</code></pre>
+1  0.05</code></pre>
 </div>
 </div>
 <p>Ideally, the false positive rate will be equal to <code>alpha</code>, which we set at 0.05.</p>
@@ -1011,7 +1011,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <h2 class="anchored" data-anchor-id="power-for-different-effect-sizes">Power for different effect sizes</h2>
 <p>In real life, we will not know the effect size of our quantity of interest and so we will need to repeatedly perform the power analysis over a range of different plausible effect sizes. Perhaps we might also want to calculate power as we vary other data-generating parameters, such as the number of pop and rock songs sampled and the number of subjects sampled. We can create a table that combines all combinations of the parameters we want to vary in a grid.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># grid of paramater values of interest</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># grid of parameter values of interest</span></span>
 <span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>pgrid <span class="ot">&lt;-</span> <span class="fu">crossing</span>(</span>
 <span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_subj =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">25</span>, <span class="dv">50</span>),</span>
 <span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_pop =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">40</span>),</span>
@@ -1043,16 +1043,16 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <pre><code># A tibble: 420 × 8
    effect   group    term           estimate std.error statistic    df   p.value
    &lt;chr&gt;    &lt;chr&gt;    &lt;chr&gt;             &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;
- 1 fixed    &lt;NA&gt;     (Intercept)      58.3        2.97    19.7    10.4  1.42e- 9
- 2 fixed    &lt;NA&gt;     genre_i          -0.383      1.98    -0.194  12.9  8.49e- 1
- 3 ran_pars song_id  sd__(Intercep…    2.62      NA       NA      NA   NA       
- 4 ran_pars subj_id  sd__(Intercep…    8.58      NA       NA      NA   NA       
- 5 ran_pars subj_id  sd__genre_i       3.24      NA       NA      NA   NA       
- 6 ran_pars subj_id  cor__(Interce…   -0.708     NA       NA      NA   NA       
- 7 ran_pars Residual sd__Observati…    8.62      NA       NA      NA   NA       
- 8 fixed    &lt;NA&gt;     (Intercept)      62.8        2.15    29.1    14.6  2.36e-14
- 9 fixed    &lt;NA&gt;     genre_i           1.75       2.13     0.820  16.8  4.24e- 1
-10 ran_pars song_id  sd__(Intercep…    3.52      NA       NA      NA   NA       
+ 1 fixed    &lt;NA&gt;     (Intercept)     60.3         2.43   24.8     16.5  1.63e-14
+ 2 fixed    &lt;NA&gt;     genre_i          1.01        2.48    0.408   19.1  6.87e- 1
+ 3 ran_pars song_id  sd__(Intercep…   4.40       NA      NA       NA   NA       
+ 4 ran_pars subj_id  sd__(Intercep…   5.85       NA      NA       NA   NA       
+ 5 ran_pars subj_id  sd__genre_i      3.38       NA      NA       NA   NA       
+ 6 ran_pars subj_id  cor__(Interce…   0.732      NA      NA       NA   NA       
+ 7 ran_pars Residual sd__Observati…   7.56       NA      NA       NA   NA       
+ 8 fixed    &lt;NA&gt;     (Intercept)     59.8         2.28   26.2     10.7  4.50e-11
+ 9 fixed    &lt;NA&gt;     genre_i          0.0687      2.20    0.0313  12.3  9.76e- 1
+10 ran_pars song_id  sd__(Intercep…   2.25       NA      NA       NA   NA       
 # ℹ 410 more rows</code></pre>
 </div>
 </div>
@@ -1125,23 +1125,23 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a>      )</span>
 <span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<div id="peypicwoph" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
-<style>#peypicwoph table {
+<div id="icwophmgdk" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:auto;height:auto;">
+<style>#icwophmgdk table {
   font-family: system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-#peypicwoph thead, #peypicwoph tbody, #peypicwoph tfoot, #peypicwoph tr, #peypicwoph td, #peypicwoph th {
+#icwophmgdk thead, #icwophmgdk tbody, #icwophmgdk tfoot, #icwophmgdk tr, #icwophmgdk td, #icwophmgdk th {
   border-style: none;
 }
 
-#peypicwoph p {
+#icwophmgdk p {
   margin: 0;
   padding: 0;
 }
 
-#peypicwoph .gt_table {
+#icwophmgdk .gt_table {
   display: table;
   border-collapse: collapse;
   line-height: normal;
@@ -1167,12 +1167,12 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
   border-left-color: #D3D3D3;
 }
 
-#peypicwoph .gt_caption {
+#icwophmgdk .gt_caption {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-#peypicwoph .gt_title {
+#icwophmgdk .gt_title {
   color: #333333;
   font-size: 125%;
   font-weight: initial;
@@ -1184,7 +1184,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
   border-bottom-width: 0;
 }
 
-#peypicwoph .gt_subtitle {
+#icwophmgdk .gt_subtitle {
   color: #333333;
   font-size: 85%;
   font-weight: initial;
@@ -1196,7 +1196,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
   border-top-width: 0;
 }
 
-#peypicwoph .gt_heading {
+#icwophmgdk .gt_heading {
   background-color: #FFFFFF;
   text-align: center;
   border-bottom-color: #FFFFFF;
@@ -1208,13 +1208,13 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
   border-right-color: #D3D3D3;
 }
 
-#peypicwoph .gt_bottom_border {
+#icwophmgdk .gt_bottom_border {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
 }
 
-#peypicwoph .gt_col_headings {
+#icwophmgdk .gt_col_headings {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1229,7 +1229,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
   border-right-color: #D3D3D3;
 }
 
-#peypicwoph .gt_col_heading {
+#icwophmgdk .gt_col_heading {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1249,7 +1249,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
   overflow-x: hidden;
 }
 
-#peypicwoph .gt_column_spanner_outer {
+#icwophmgdk .gt_column_spanner_outer {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1261,15 +1261,15 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
   padding-right: 4px;
 }
 
-#peypicwoph .gt_column_spanner_outer:first-child {
+#icwophmgdk .gt_column_spanner_outer:first-child {
   padding-left: 0;
 }
 
-#peypicwoph .gt_column_spanner_outer:last-child {
+#icwophmgdk .gt_column_spanner_outer:last-child {
   padding-right: 0;
 }
 
-#peypicwoph .gt_column_spanner {
+#icwophmgdk .gt_column_spanner {
   border-bottom-style: solid;
   border-bottom-width: 2px;
   border-bottom-color: #D3D3D3;
@@ -1281,11 +1281,11 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
   width: 100%;
 }
 
-#peypicwoph .gt_spanner_row {
+#icwophmgdk .gt_spanner_row {
   border-bottom-style: hidden;
 }
 
-#peypicwoph .gt_group_heading {
+#icwophmgdk .gt_group_heading {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1311,7 +1311,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
   text-align: left;
 }
 
-#peypicwoph .gt_empty_group_heading {
+#icwophmgdk .gt_empty_group_heading {
   padding: 0.5px;
   color: #333333;
   background-color: #FFFFFF;
@@ -1326,15 +1326,15 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
   vertical-align: middle;
 }
 
-#peypicwoph .gt_from_md > :first-child {
+#icwophmgdk .gt_from_md > :first-child {
   margin-top: 0;
 }
 
-#peypicwoph .gt_from_md > :last-child {
+#icwophmgdk .gt_from_md > :last-child {
   margin-bottom: 0;
 }
 
-#peypicwoph .gt_row {
+#icwophmgdk .gt_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1353,7 +1353,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
   overflow-x: hidden;
 }
 
-#peypicwoph .gt_stub {
+#icwophmgdk .gt_stub {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1366,7 +1366,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
   padding-right: 5px;
 }
 
-#peypicwoph .gt_stub_row_group {
+#icwophmgdk .gt_stub_row_group {
   color: #333333;
   background-color: #FFFFFF;
   font-size: 100%;
@@ -1380,15 +1380,15 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
   vertical-align: top;
 }
 
-#peypicwoph .gt_row_group_first td {
+#icwophmgdk .gt_row_group_first td {
   border-top-width: 2px;
 }
 
-#peypicwoph .gt_row_group_first th {
+#icwophmgdk .gt_row_group_first th {
   border-top-width: 2px;
 }
 
-#peypicwoph .gt_summary_row {
+#icwophmgdk .gt_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1398,16 +1398,16 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
   padding-right: 5px;
 }
 
-#peypicwoph .gt_first_summary_row {
+#icwophmgdk .gt_first_summary_row {
   border-top-style: solid;
   border-top-color: #D3D3D3;
 }
 
-#peypicwoph .gt_first_summary_row.thick {
+#icwophmgdk .gt_first_summary_row.thick {
   border-top-width: 2px;
 }
 
-#peypicwoph .gt_last_summary_row {
+#icwophmgdk .gt_last_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1417,7 +1417,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
   border-bottom-color: #D3D3D3;
 }
 
-#peypicwoph .gt_grand_summary_row {
+#icwophmgdk .gt_grand_summary_row {
   color: #333333;
   background-color: #FFFFFF;
   text-transform: inherit;
@@ -1427,7 +1427,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
   padding-right: 5px;
 }
 
-#peypicwoph .gt_first_grand_summary_row {
+#icwophmgdk .gt_first_grand_summary_row {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1437,7 +1437,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
   border-top-color: #D3D3D3;
 }
 
-#peypicwoph .gt_last_grand_summary_row_top {
+#icwophmgdk .gt_last_grand_summary_row_top {
   padding-top: 8px;
   padding-bottom: 8px;
   padding-left: 5px;
@@ -1447,11 +1447,11 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
   border-bottom-color: #D3D3D3;
 }
 
-#peypicwoph .gt_striped {
+#icwophmgdk .gt_striped {
   background-color: rgba(128, 128, 128, 0.05);
 }
 
-#peypicwoph .gt_table_body {
+#icwophmgdk .gt_table_body {
   border-top-style: solid;
   border-top-width: 2px;
   border-top-color: #D3D3D3;
@@ -1460,7 +1460,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
   border-bottom-color: #D3D3D3;
 }
 
-#peypicwoph .gt_footnotes {
+#icwophmgdk .gt_footnotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1474,7 +1474,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
   border-right-color: #D3D3D3;
 }
 
-#peypicwoph .gt_footnote {
+#icwophmgdk .gt_footnote {
   margin: 0px;
   font-size: 90%;
   padding-top: 4px;
@@ -1483,7 +1483,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
   padding-right: 5px;
 }
 
-#peypicwoph .gt_sourcenotes {
+#icwophmgdk .gt_sourcenotes {
   color: #333333;
   background-color: #FFFFFF;
   border-bottom-style: none;
@@ -1497,7 +1497,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
   border-right-color: #D3D3D3;
 }
 
-#peypicwoph .gt_sourcenote {
+#icwophmgdk .gt_sourcenote {
   font-size: 90%;
   padding-top: 4px;
   padding-bottom: 4px;
@@ -1505,72 +1505,72 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
   padding-right: 5px;
 }
 
-#peypicwoph .gt_left {
+#icwophmgdk .gt_left {
   text-align: left;
 }
 
-#peypicwoph .gt_center {
+#icwophmgdk .gt_center {
   text-align: center;
 }
 
-#peypicwoph .gt_right {
+#icwophmgdk .gt_right {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
-#peypicwoph .gt_font_normal {
+#icwophmgdk .gt_font_normal {
   font-weight: normal;
 }
 
-#peypicwoph .gt_font_bold {
+#icwophmgdk .gt_font_bold {
   font-weight: bold;
 }
 
-#peypicwoph .gt_font_italic {
+#icwophmgdk .gt_font_italic {
   font-style: italic;
 }
 
-#peypicwoph .gt_super {
+#icwophmgdk .gt_super {
   font-size: 65%;
 }
 
-#peypicwoph .gt_footnote_marks {
+#icwophmgdk .gt_footnote_marks {
   font-size: 75%;
   vertical-align: 0.4em;
   position: initial;
 }
 
-#peypicwoph .gt_asterisk {
+#icwophmgdk .gt_asterisk {
   font-size: 100%;
   vertical-align: 0;
 }
 
-#peypicwoph .gt_indent_1 {
+#icwophmgdk .gt_indent_1 {
   text-indent: 5px;
 }
 
-#peypicwoph .gt_indent_2 {
+#icwophmgdk .gt_indent_2 {
   text-indent: 10px;
 }
 
-#peypicwoph .gt_indent_3 {
+#icwophmgdk .gt_indent_3 {
   text-indent: 15px;
 }
 
-#peypicwoph .gt_indent_4 {
+#icwophmgdk .gt_indent_4 {
   text-indent: 20px;
 }
 
-#peypicwoph .gt_indent_5 {
+#icwophmgdk .gt_indent_5 {
   text-indent: 25px;
 }
 
-#peypicwoph .katex-display {
+#icwophmgdk .katex-display {
   display: inline-flex !important;
   margin-bottom: 0.75em !important;
 }
 
-#peypicwoph div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
+#icwophmgdk div.Reactable > div.rt-table > div.rt-thead > div.rt-tr.rt-tr-group-header > div.rt-th-group:after {
   height: 0px !important;
 }
 </style>
@@ -1598,9 +1598,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">10</td>
 <td class="gt_row gt_right" headers="n_rock">10</td>
 <td class="gt_row gt_right" headers="beta_1">1</td>
-<td class="gt_row gt_right" headers="mean_estimate">0.6821340</td>
-<td class="gt_row gt_right" headers="mean_se">2.1433712</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #F84200; color: #FFFFFF">0.08</td>
+<td class="gt_row gt_right" headers="mean_estimate">1.0911484</td>
+<td class="gt_row gt_right" headers="mean_se">2.1273093</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #F84600; color: #FFFFFF">0.09</td>
 </tr>
 <tr class="even">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -1608,9 +1608,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">10</td>
 <td class="gt_row gt_right" headers="n_rock">10</td>
 <td class="gt_row gt_right" headers="beta_1">2</td>
-<td class="gt_row gt_right" headers="mean_estimate">1.7274589</td>
-<td class="gt_row gt_right" headers="mean_se">2.1428333</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #F45500; color: #FFFFFF">0.13</td>
+<td class="gt_row gt_right" headers="mean_estimate">2.0837793</td>
+<td class="gt_row gt_right" headers="mean_se">2.1251028</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #EF6400; color: #FFFFFF">0.18</td>
 </tr>
 <tr class="odd">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -1618,9 +1618,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">10</td>
 <td class="gt_row gt_right" headers="n_rock">10</td>
 <td class="gt_row gt_right" headers="beta_1">3</td>
-<td class="gt_row gt_right" headers="mean_estimate">2.7482126</td>
-<td class="gt_row gt_right" headers="mean_se">2.1406310</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #ED6A00; color: #FFFFFF">0.20</td>
+<td class="gt_row gt_right" headers="mean_estimate">3.0958068</td>
+<td class="gt_row gt_right" headers="mean_se">2.1249663</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #E57E00; color: #FFFFFF">0.28</td>
 </tr>
 <tr class="even">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -1628,9 +1628,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">10</td>
 <td class="gt_row gt_right" headers="n_rock">10</td>
 <td class="gt_row gt_right" headers="beta_1">4</td>
-<td class="gt_row gt_right" headers="mean_estimate">3.6963509</td>
-<td class="gt_row gt_right" headers="mean_se">2.1395989</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #E38200; color: #FFFFFF">0.30</td>
+<td class="gt_row gt_right" headers="mean_estimate">4.1081721</td>
+<td class="gt_row gt_right" headers="mean_se">2.1281599</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #D59A00; color: #000000">0.41</td>
 </tr>
 <tr class="odd">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -1638,9 +1638,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">10</td>
 <td class="gt_row gt_right" headers="n_rock">10</td>
 <td class="gt_row gt_right" headers="beta_1">5</td>
-<td class="gt_row gt_right" headers="mean_estimate">4.6922276</td>
-<td class="gt_row gt_right" headers="mean_se">2.1399930</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #CCA700; color: #000000">0.48</td>
+<td class="gt_row gt_right" headers="mean_estimate">5.1241864</td>
+<td class="gt_row gt_right" headers="mean_se">2.1333074</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #B8BD00; color: #000000">0.60</td>
 </tr>
 <tr class="even">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -1648,8 +1648,8 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">10</td>
 <td class="gt_row gt_right" headers="n_rock">40</td>
 <td class="gt_row gt_right" headers="beta_1">1</td>
-<td class="gt_row gt_right" headers="mean_estimate">0.7216763</td>
-<td class="gt_row gt_right" headers="mean_se">1.8288687</td>
+<td class="gt_row gt_right" headers="mean_estimate">1.0728309</td>
+<td class="gt_row gt_right" headers="mean_se">1.8073188</td>
 <td class="gt_row gt_right" headers="power" style="background-color: #FA3900; color: #FFFFFF">0.06</td>
 </tr>
 <tr class="odd">
@@ -1658,9 +1658,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">10</td>
 <td class="gt_row gt_right" headers="n_rock">40</td>
 <td class="gt_row gt_right" headers="beta_1">2</td>
-<td class="gt_row gt_right" headers="mean_estimate">1.7059291</td>
-<td class="gt_row gt_right" headers="mean_se">1.8322471</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #F55100; color: #FFFFFF">0.12</td>
+<td class="gt_row gt_right" headers="mean_estimate">2.0789428</td>
+<td class="gt_row gt_right" headers="mean_se">1.8025028</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #EF6400; color: #FFFFFF">0.18</td>
 </tr>
 <tr class="even">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -1668,9 +1668,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">10</td>
 <td class="gt_row gt_right" headers="n_rock">40</td>
 <td class="gt_row gt_right" headers="beta_1">3</td>
-<td class="gt_row gt_right" headers="mean_estimate">2.6756674</td>
-<td class="gt_row gt_right" headers="mean_se">1.8421349</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #E57E00; color: #FFFFFF">0.28</td>
+<td class="gt_row gt_right" headers="mean_estimate">3.1291112</td>
+<td class="gt_row gt_right" headers="mean_se">1.8068840</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #D79800; color: #000000">0.40</td>
 </tr>
 <tr class="odd">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -1678,9 +1678,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">10</td>
 <td class="gt_row gt_right" headers="n_rock">40</td>
 <td class="gt_row gt_right" headers="beta_1">4</td>
-<td class="gt_row gt_right" headers="mean_estimate">3.7319609</td>
-<td class="gt_row gt_right" headers="mean_se">1.8460894</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #CCA700; color: #000000">0.48</td>
+<td class="gt_row gt_right" headers="mean_estimate">4.1257522</td>
+<td class="gt_row gt_right" headers="mean_se">1.8102495</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #C1B400; color: #000000">0.55</td>
 </tr>
 <tr class="even">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -1688,9 +1688,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">10</td>
 <td class="gt_row gt_right" headers="n_rock">40</td>
 <td class="gt_row gt_right" headers="beta_1">5</td>
-<td class="gt_row gt_right" headers="mean_estimate">4.7424011</td>
-<td class="gt_row gt_right" headers="mean_se">1.8396711</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #9FD200; color: #000000">0.72</td>
+<td class="gt_row gt_right" headers="mean_estimate">5.1349813</td>
+<td class="gt_row gt_right" headers="mean_se">1.8095313</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #87E100; color: #000000">0.81</td>
 </tr>
 <tr class="odd">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -1698,9 +1698,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">40</td>
 <td class="gt_row gt_right" headers="n_rock">10</td>
 <td class="gt_row gt_right" headers="beta_1">1</td>
-<td class="gt_row gt_right" headers="mean_estimate">0.8245941</td>
-<td class="gt_row gt_right" headers="mean_se">1.8332649</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #FA3900; color: #FFFFFF">0.06</td>
+<td class="gt_row gt_right" headers="mean_estimate">1.0639734</td>
+<td class="gt_row gt_right" headers="mean_se">1.8216075</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #F84600; color: #FFFFFF">0.09</td>
 </tr>
 <tr class="even">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -1708,9 +1708,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">40</td>
 <td class="gt_row gt_right" headers="n_rock">10</td>
 <td class="gt_row gt_right" headers="beta_1">2</td>
-<td class="gt_row gt_right" headers="mean_estimate">1.8476570</td>
-<td class="gt_row gt_right" headers="mean_se">1.8308934</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #F35800; color: #FFFFFF">0.14</td>
+<td class="gt_row gt_right" headers="mean_estimate">2.0576649</td>
+<td class="gt_row gt_right" headers="mean_se">1.8167987</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #EC6C00; color: #FFFFFF">0.21</td>
 </tr>
 <tr class="odd">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -1718,9 +1718,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">40</td>
 <td class="gt_row gt_right" headers="n_rock">10</td>
 <td class="gt_row gt_right" headers="beta_1">3</td>
-<td class="gt_row gt_right" headers="mean_estimate">2.8841097</td>
-<td class="gt_row gt_right" headers="mean_se">1.8234947</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #E57E00; color: #FFFFFF">0.28</td>
+<td class="gt_row gt_right" headers="mean_estimate">3.0749228</td>
+<td class="gt_row gt_right" headers="mean_se">1.8250308</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #DD8D00; color: #FFFFFF">0.35</td>
 </tr>
 <tr class="even">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -1728,9 +1728,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">40</td>
 <td class="gt_row gt_right" headers="n_rock">10</td>
 <td class="gt_row gt_right" headers="beta_1">4</td>
-<td class="gt_row gt_right" headers="mean_estimate">3.9163802</td>
-<td class="gt_row gt_right" headers="mean_se">1.8294477</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #C4B100; color: #000000">0.53</td>
+<td class="gt_row gt_right" headers="mean_estimate">4.0410785</td>
+<td class="gt_row gt_right" headers="mean_se">1.8276808</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #C2B200; color: #000000">0.54</td>
 </tr>
 <tr class="odd">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -1738,9 +1738,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">40</td>
 <td class="gt_row gt_right" headers="n_rock">10</td>
 <td class="gt_row gt_right" headers="beta_1">5</td>
-<td class="gt_row gt_right" headers="mean_estimate">4.9206879</td>
-<td class="gt_row gt_right" headers="mean_se">1.8285286</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #9FD200; color: #000000">0.72</td>
+<td class="gt_row gt_right" headers="mean_estimate">5.0704031</td>
+<td class="gt_row gt_right" headers="mean_se">1.8268144</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #8ADF00; color: #000000">0.80</td>
 </tr>
 <tr class="even">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -1748,9 +1748,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">40</td>
 <td class="gt_row gt_right" headers="n_rock">40</td>
 <td class="gt_row gt_right" headers="beta_1">1</td>
-<td class="gt_row gt_right" headers="mean_estimate">1.1213453</td>
-<td class="gt_row gt_right" headers="mean_se">1.4790178</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #F84200; color: #FFFFFF">0.08</td>
+<td class="gt_row gt_right" headers="mean_estimate">1.0197556</td>
+<td class="gt_row gt_right" headers="mean_se">1.5420443</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #F84600; color: #FFFFFF">0.09</td>
 </tr>
 <tr class="odd">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -1758,119 +1758,119 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">40</td>
 <td class="gt_row gt_right" headers="n_rock">40</td>
 <td class="gt_row gt_right" headers="beta_1">2</td>
-<td class="gt_row gt_right" headers="mean_estimate">2.1427686</td>
-<td class="gt_row gt_right" headers="mean_se">1.4853964</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #E77900; color: #FFFFFF">0.26</td>
-</tr>
-<tr class="even">
-<td class="gt_row gt_left" headers="term">genre_i</td>
-<td class="gt_row gt_right" headers="n_subj">10</td>
-<td class="gt_row gt_right" headers="n_pop">40</td>
-<td class="gt_row gt_right" headers="n_rock">40</td>
-<td class="gt_row gt_right" headers="beta_1">3</td>
-<td class="gt_row gt_right" headers="mean_estimate">3.1372541</td>
-<td class="gt_row gt_right" headers="mean_se">1.4847812</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #CDA500; color: #000000">0.47</td>
-</tr>
-<tr class="odd">
-<td class="gt_row gt_left" headers="term">genre_i</td>
-<td class="gt_row gt_right" headers="n_subj">10</td>
-<td class="gt_row gt_right" headers="n_pop">40</td>
-<td class="gt_row gt_right" headers="n_rock">40</td>
-<td class="gt_row gt_right" headers="beta_1">4</td>
-<td class="gt_row gt_right" headers="mean_estimate">4.1692116</td>
-<td class="gt_row gt_right" headers="mean_se">1.4875181</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #98D700; color: #000000">0.75</td>
-</tr>
-<tr class="even">
-<td class="gt_row gt_left" headers="term">genre_i</td>
-<td class="gt_row gt_right" headers="n_subj">10</td>
-<td class="gt_row gt_right" headers="n_pop">40</td>
-<td class="gt_row gt_right" headers="n_rock">40</td>
-<td class="gt_row gt_right" headers="beta_1">5</td>
-<td class="gt_row gt_right" headers="mean_estimate">5.1915115</td>
-<td class="gt_row gt_right" headers="mean_se">1.4906054</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #6EEC00; color: #000000">0.88</td>
-</tr>
-<tr class="odd">
-<td class="gt_row gt_left" headers="term">genre_i</td>
-<td class="gt_row gt_right" headers="n_subj">25</td>
-<td class="gt_row gt_right" headers="n_pop">10</td>
-<td class="gt_row gt_right" headers="n_rock">10</td>
-<td class="gt_row gt_right" headers="beta_1">1</td>
-<td class="gt_row gt_right" headers="mean_estimate">0.6206088</td>
-<td class="gt_row gt_right" headers="mean_se">1.7168699</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #FB3300; color: #FFFFFF">0.05</td>
-</tr>
-<tr class="even">
-<td class="gt_row gt_left" headers="term">genre_i</td>
-<td class="gt_row gt_right" headers="n_subj">25</td>
-<td class="gt_row gt_right" headers="n_pop">10</td>
-<td class="gt_row gt_right" headers="n_rock">10</td>
-<td class="gt_row gt_right" headers="beta_1">2</td>
-<td class="gt_row gt_right" headers="mean_estimate">1.6084364</td>
-<td class="gt_row gt_right" headers="mean_se">1.7200867</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #F15E00; color: #FFFFFF">0.16</td>
-</tr>
-<tr class="odd">
-<td class="gt_row gt_left" headers="term">genre_i</td>
-<td class="gt_row gt_right" headers="n_subj">25</td>
-<td class="gt_row gt_right" headers="n_pop">10</td>
-<td class="gt_row gt_right" headers="n_rock">10</td>
-<td class="gt_row gt_right" headers="beta_1">3</td>
-<td class="gt_row gt_right" headers="mean_estimate">2.6187355</td>
-<td class="gt_row gt_right" headers="mean_se">1.7234279</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #E08700; color: #FFFFFF">0.32</td>
-</tr>
-<tr class="even">
-<td class="gt_row gt_left" headers="term">genre_i</td>
-<td class="gt_row gt_right" headers="n_subj">25</td>
-<td class="gt_row gt_right" headers="n_pop">10</td>
-<td class="gt_row gt_right" headers="n_rock">10</td>
-<td class="gt_row gt_right" headers="beta_1">4</td>
-<td class="gt_row gt_right" headers="mean_estimate">3.6035387</td>
-<td class="gt_row gt_right" headers="mean_se">1.7198478</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #CDA500; color: #000000">0.47</td>
-</tr>
-<tr class="odd">
-<td class="gt_row gt_left" headers="term">genre_i</td>
-<td class="gt_row gt_right" headers="n_subj">25</td>
-<td class="gt_row gt_right" headers="n_pop">10</td>
-<td class="gt_row gt_right" headers="n_rock">10</td>
-<td class="gt_row gt_right" headers="beta_1">5</td>
-<td class="gt_row gt_right" headers="mean_estimate">4.5822773</td>
-<td class="gt_row gt_right" headers="mean_se">1.7152229</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #98D700; color: #000000">0.75</td>
-</tr>
-<tr class="even">
-<td class="gt_row gt_left" headers="term">genre_i</td>
-<td class="gt_row gt_right" headers="n_subj">25</td>
-<td class="gt_row gt_right" headers="n_pop">10</td>
-<td class="gt_row gt_right" headers="n_rock">40</td>
-<td class="gt_row gt_right" headers="beta_1">1</td>
-<td class="gt_row gt_right" headers="mean_estimate">0.9055907</td>
-<td class="gt_row gt_right" headers="mean_se">1.4495972</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #F84200; color: #FFFFFF">0.08</td>
-</tr>
-<tr class="odd">
-<td class="gt_row gt_left" headers="term">genre_i</td>
-<td class="gt_row gt_right" headers="n_subj">25</td>
-<td class="gt_row gt_right" headers="n_pop">10</td>
-<td class="gt_row gt_right" headers="n_rock">40</td>
-<td class="gt_row gt_right" headers="beta_1">2</td>
-<td class="gt_row gt_right" headers="mean_estimate">1.8898537</td>
-<td class="gt_row gt_right" headers="mean_se">1.4482419</td>
+<td class="gt_row gt_right" headers="mean_estimate">2.0179443</td>
+<td class="gt_row gt_right" headers="mean_se">1.5487067</td>
 <td class="gt_row gt_right" headers="power" style="background-color: #EC6C00; color: #FFFFFF">0.21</td>
 </tr>
 <tr class="even">
 <td class="gt_row gt_left" headers="term">genre_i</td>
+<td class="gt_row gt_right" headers="n_subj">10</td>
+<td class="gt_row gt_right" headers="n_pop">40</td>
+<td class="gt_row gt_right" headers="n_rock">40</td>
+<td class="gt_row gt_right" headers="beta_1">3</td>
+<td class="gt_row gt_right" headers="mean_estimate">3.0093892</td>
+<td class="gt_row gt_right" headers="mean_se">1.5446207</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #D79800; color: #000000">0.40</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="term">genre_i</td>
+<td class="gt_row gt_right" headers="n_subj">10</td>
+<td class="gt_row gt_right" headers="n_pop">40</td>
+<td class="gt_row gt_right" headers="n_rock">40</td>
+<td class="gt_row gt_right" headers="beta_1">4</td>
+<td class="gt_row gt_right" headers="mean_estimate">4.0032514</td>
+<td class="gt_row gt_right" headers="mean_se">1.5411597</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #A8CB00; color: #000000">0.68</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="term">genre_i</td>
+<td class="gt_row gt_right" headers="n_subj">10</td>
+<td class="gt_row gt_right" headers="n_pop">40</td>
+<td class="gt_row gt_right" headers="n_rock">40</td>
+<td class="gt_row gt_right" headers="beta_1">5</td>
+<td class="gt_row gt_right" headers="mean_estimate">5.0022225</td>
+<td class="gt_row gt_right" headers="mean_se">1.5427479</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #84E200; color: #000000">0.82</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="term">genre_i</td>
+<td class="gt_row gt_right" headers="n_subj">25</td>
+<td class="gt_row gt_right" headers="n_pop">10</td>
+<td class="gt_row gt_right" headers="n_rock">10</td>
+<td class="gt_row gt_right" headers="beta_1">1</td>
+<td class="gt_row gt_right" headers="mean_estimate">1.0665803</td>
+<td class="gt_row gt_right" headers="mean_se">1.6645031</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #F84600; color: #FFFFFF">0.09</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="term">genre_i</td>
+<td class="gt_row gt_right" headers="n_subj">25</td>
+<td class="gt_row gt_right" headers="n_pop">10</td>
+<td class="gt_row gt_right" headers="n_rock">10</td>
+<td class="gt_row gt_right" headers="beta_1">2</td>
+<td class="gt_row gt_right" headers="mean_estimate">2.0310712</td>
+<td class="gt_row gt_right" headers="mean_se">1.6685012</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #E97400; color: #FFFFFF">0.24</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="term">genre_i</td>
+<td class="gt_row gt_right" headers="n_subj">25</td>
+<td class="gt_row gt_right" headers="n_pop">10</td>
+<td class="gt_row gt_right" headers="n_rock">10</td>
+<td class="gt_row gt_right" headers="beta_1">3</td>
+<td class="gt_row gt_right" headers="mean_estimate">3.0246620</td>
+<td class="gt_row gt_right" headers="mean_se">1.6659964</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #D79800; color: #000000">0.40</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="term">genre_i</td>
+<td class="gt_row gt_right" headers="n_subj">25</td>
+<td class="gt_row gt_right" headers="n_pop">10</td>
+<td class="gt_row gt_right" headers="n_rock">10</td>
+<td class="gt_row gt_right" headers="beta_1">4</td>
+<td class="gt_row gt_right" headers="mean_estimate">4.0273854</td>
+<td class="gt_row gt_right" headers="mean_se">1.6625597</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #A8CB00; color: #000000">0.68</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="term">genre_i</td>
+<td class="gt_row gt_right" headers="n_subj">25</td>
+<td class="gt_row gt_right" headers="n_pop">10</td>
+<td class="gt_row gt_right" headers="n_rock">10</td>
+<td class="gt_row gt_right" headers="beta_1">5</td>
+<td class="gt_row gt_right" headers="mean_estimate">5.0287656</td>
+<td class="gt_row gt_right" headers="mean_se">1.6594590</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #7AE700; color: #000000">0.85</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="term">genre_i</td>
+<td class="gt_row gt_right" headers="n_subj">25</td>
+<td class="gt_row gt_right" headers="n_pop">10</td>
+<td class="gt_row gt_right" headers="n_rock">40</td>
+<td class="gt_row gt_right" headers="beta_1">1</td>
+<td class="gt_row gt_right" headers="mean_estimate">1.0512863</td>
+<td class="gt_row gt_right" headers="mean_se">1.4135777</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #F64E00; color: #FFFFFF">0.11</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="term">genre_i</td>
+<td class="gt_row gt_right" headers="n_subj">25</td>
+<td class="gt_row gt_right" headers="n_pop">10</td>
+<td class="gt_row gt_right" headers="n_rock">40</td>
+<td class="gt_row gt_right" headers="beta_1">2</td>
+<td class="gt_row gt_right" headers="mean_estimate">2.0531068</td>
+<td class="gt_row gt_right" headers="mean_se">1.4132064</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #E28500; color: #FFFFFF">0.31</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="term">genre_i</td>
 <td class="gt_row gt_right" headers="n_subj">25</td>
 <td class="gt_row gt_right" headers="n_pop">10</td>
 <td class="gt_row gt_right" headers="n_rock">40</td>
 <td class="gt_row gt_right" headers="beta_1">3</td>
-<td class="gt_row gt_right" headers="mean_estimate">2.8874405</td>
-<td class="gt_row gt_right" headers="mean_se">1.4451127</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #C9AB00; color: #000000">0.50</td>
+<td class="gt_row gt_right" headers="mean_estimate">3.0196838</td>
+<td class="gt_row gt_right" headers="mean_se">1.4144981</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #B8BD00; color: #000000">0.60</td>
 </tr>
 <tr class="odd">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -1878,8 +1878,8 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">10</td>
 <td class="gt_row gt_right" headers="n_rock">40</td>
 <td class="gt_row gt_right" headers="beta_1">4</td>
-<td class="gt_row gt_right" headers="mean_estimate">3.9016062</td>
-<td class="gt_row gt_right" headers="mean_se">1.4461336</td>
+<td class="gt_row gt_right" headers="mean_estimate">3.9979066</td>
+<td class="gt_row gt_right" headers="mean_se">1.4171950</td>
 <td class="gt_row gt_right" headers="power" style="background-color: #95D800; color: #000000">0.76</td>
 </tr>
 <tr class="even">
@@ -1888,9 +1888,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">10</td>
 <td class="gt_row gt_right" headers="n_rock">40</td>
 <td class="gt_row gt_right" headers="beta_1">5</td>
-<td class="gt_row gt_right" headers="mean_estimate">4.8689765</td>
-<td class="gt_row gt_right" headers="mean_se">1.4454748</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #65EF00; color: #000000">0.90</td>
+<td class="gt_row gt_right" headers="mean_estimate">4.9550036</td>
+<td class="gt_row gt_right" headers="mean_se">1.4194449</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #50F600; color: #000000">0.94</td>
 </tr>
 <tr class="odd">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -1898,9 +1898,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">40</td>
 <td class="gt_row gt_right" headers="n_rock">10</td>
 <td class="gt_row gt_right" headers="beta_1">1</td>
-<td class="gt_row gt_right" headers="mean_estimate">1.0219424</td>
-<td class="gt_row gt_right" headers="mean_se">1.4336251</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #F45500; color: #FFFFFF">0.13</td>
+<td class="gt_row gt_right" headers="mean_estimate">1.0682212</td>
+<td class="gt_row gt_right" headers="mean_se">1.4115448</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #F15E00; color: #FFFFFF">0.16</td>
 </tr>
 <tr class="even">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -1908,9 +1908,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">40</td>
 <td class="gt_row gt_right" headers="n_rock">10</td>
 <td class="gt_row gt_right" headers="beta_1">2</td>
-<td class="gt_row gt_right" headers="mean_estimate">2.0103972</td>
-<td class="gt_row gt_right" headers="mean_se">1.4328667</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #E57E00; color: #FFFFFF">0.28</td>
+<td class="gt_row gt_right" headers="mean_estimate">2.0937375</td>
+<td class="gt_row gt_right" headers="mean_se">1.4165387</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #E08700; color: #FFFFFF">0.32</td>
 </tr>
 <tr class="odd">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -1918,9 +1918,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">40</td>
 <td class="gt_row gt_right" headers="n_rock">10</td>
 <td class="gt_row gt_right" headers="beta_1">3</td>
-<td class="gt_row gt_right" headers="mean_estimate">2.9942518</td>
-<td class="gt_row gt_right" headers="mean_se">1.4348609</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #CAA900; color: #000000">0.49</td>
+<td class="gt_row gt_right" headers="mean_estimate">3.1038292</td>
+<td class="gt_row gt_right" headers="mean_se">1.4179894</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #BABB00; color: #000000">0.59</td>
 </tr>
 <tr class="even">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -1928,9 +1928,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">40</td>
 <td class="gt_row gt_right" headers="n_rock">10</td>
 <td class="gt_row gt_right" headers="beta_1">4</td>
-<td class="gt_row gt_right" headers="mean_estimate">4.0128924</td>
-<td class="gt_row gt_right" headers="mean_se">1.4346166</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #92DA00; color: #000000">0.77</td>
+<td class="gt_row gt_right" headers="mean_estimate">4.1123563</td>
+<td class="gt_row gt_right" headers="mean_se">1.4199763</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #84E200; color: #000000">0.82</td>
 </tr>
 <tr class="odd">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -1938,9 +1938,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">40</td>
 <td class="gt_row gt_right" headers="n_rock">10</td>
 <td class="gt_row gt_right" headers="beta_1">5</td>
-<td class="gt_row gt_right" headers="mean_estimate">5.0216769</td>
-<td class="gt_row gt_right" headers="mean_se">1.4367683</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #38FA00; color: #000000">0.97</td>
+<td class="gt_row gt_right" headers="mean_estimate">5.1075348</td>
+<td class="gt_row gt_right" headers="mean_se">1.4220712</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #56F400; color: #000000">0.93</td>
 </tr>
 <tr class="even">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -1948,9 +1948,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">40</td>
 <td class="gt_row gt_right" headers="n_rock">40</td>
 <td class="gt_row gt_right" headers="beta_1">1</td>
-<td class="gt_row gt_right" headers="mean_estimate">0.9529641</td>
-<td class="gt_row gt_right" headers="mean_se">1.0960451</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #F06100; color: #FFFFFF">0.17</td>
+<td class="gt_row gt_right" headers="mean_estimate">1.1493096</td>
+<td class="gt_row gt_right" headers="mean_se">1.0928294</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #F25B00; color: #FFFFFF">0.15</td>
 </tr>
 <tr class="odd">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -1958,9 +1958,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">40</td>
 <td class="gt_row gt_right" headers="n_rock">40</td>
 <td class="gt_row gt_right" headers="beta_1">2</td>
-<td class="gt_row gt_right" headers="mean_estimate">1.9357289</td>
-<td class="gt_row gt_right" headers="mean_se">1.0964074</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #D49C00; color: #000000">0.42</td>
+<td class="gt_row gt_right" headers="mean_estimate">2.1335794</td>
+<td class="gt_row gt_right" headers="mean_se">1.0922114</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #C7AD00; color: #000000">0.51</td>
 </tr>
 <tr class="even">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -1968,9 +1968,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">40</td>
 <td class="gt_row gt_right" headers="n_rock">40</td>
 <td class="gt_row gt_right" headers="beta_1">3</td>
-<td class="gt_row gt_right" headers="mean_estimate">2.9554635</td>
-<td class="gt_row gt_right" headers="mean_se">1.0980184</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #9FD200; color: #000000">0.72</td>
+<td class="gt_row gt_right" headers="mean_estimate">3.1006892</td>
+<td class="gt_row gt_right" headers="mean_se">1.0899164</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #8ADF00; color: #000000">0.80</td>
 </tr>
 <tr class="odd">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -1978,9 +1978,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">40</td>
 <td class="gt_row gt_right" headers="n_rock">40</td>
 <td class="gt_row gt_right" headers="beta_1">4</td>
-<td class="gt_row gt_right" headers="mean_estimate">3.9530592</td>
-<td class="gt_row gt_right" headers="mean_se">1.0980975</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #65EF00; color: #000000">0.90</td>
+<td class="gt_row gt_right" headers="mean_estimate">4.0892799</td>
+<td class="gt_row gt_right" headers="mean_se">1.0880540</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #2EFC00; color: #000000">0.98</td>
 </tr>
 <tr class="even">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -1988,9 +1988,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">40</td>
 <td class="gt_row gt_right" headers="n_rock">40</td>
 <td class="gt_row gt_right" headers="beta_1">5</td>
-<td class="gt_row gt_right" headers="mean_estimate">4.9797585</td>
-<td class="gt_row gt_right" headers="mean_se">1.0980000</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #1FFD00; color: #000000">0.99</td>
+<td class="gt_row gt_right" headers="mean_estimate">5.0875783</td>
+<td class="gt_row gt_right" headers="mean_se">1.0881573</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #00FF00; color: #000000">1.00</td>
 </tr>
 <tr class="odd">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -1998,9 +1998,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">10</td>
 <td class="gt_row gt_right" headers="n_rock">10</td>
 <td class="gt_row gt_right" headers="beta_1">1</td>
-<td class="gt_row gt_right" headers="mean_estimate">0.8935373</td>
-<td class="gt_row gt_right" headers="mean_se">1.5072281</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #F45500; color: #FFFFFF">0.13</td>
+<td class="gt_row gt_right" headers="mean_estimate">0.9973674</td>
+<td class="gt_row gt_right" headers="mean_se">1.5109469</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #FA3900; color: #FFFFFF">0.06</td>
 </tr>
 <tr class="even">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -2008,9 +2008,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">10</td>
 <td class="gt_row gt_right" headers="n_rock">10</td>
 <td class="gt_row gt_right" headers="beta_1">2</td>
-<td class="gt_row gt_right" headers="mean_estimate">1.8989927</td>
-<td class="gt_row gt_right" headers="mean_se">1.5076409</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #ED6A00; color: #FFFFFF">0.20</td>
+<td class="gt_row gt_right" headers="mean_estimate">2.0351973</td>
+<td class="gt_row gt_right" headers="mean_se">1.5099301</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #E28500; color: #FFFFFF">0.31</td>
 </tr>
 <tr class="odd">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -2018,9 +2018,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">10</td>
 <td class="gt_row gt_right" headers="n_rock">10</td>
 <td class="gt_row gt_right" headers="beta_1">3</td>
-<td class="gt_row gt_right" headers="mean_estimate">2.8976098</td>
-<td class="gt_row gt_right" headers="mean_se">1.5096618</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #D49C00; color: #000000">0.42</td>
+<td class="gt_row gt_right" headers="mean_estimate">3.0495109</td>
+<td class="gt_row gt_right" headers="mean_se">1.5124888</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #C5AF00; color: #000000">0.52</td>
 </tr>
 <tr class="even">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -2028,9 +2028,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">10</td>
 <td class="gt_row gt_right" headers="n_rock">10</td>
 <td class="gt_row gt_right" headers="beta_1">4</td>
-<td class="gt_row gt_right" headers="mean_estimate">3.8978394</td>
-<td class="gt_row gt_right" headers="mean_se">1.5063429</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #B2C200; color: #000000">0.63</td>
+<td class="gt_row gt_right" headers="mean_estimate">4.0171327</td>
+<td class="gt_row gt_right" headers="mean_se">1.5132230</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #9AD500; color: #000000">0.74</td>
 </tr>
 <tr class="odd">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -2038,48 +2038,8 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">10</td>
 <td class="gt_row gt_right" headers="n_rock">10</td>
 <td class="gt_row gt_right" headers="beta_1">5</td>
-<td class="gt_row gt_right" headers="mean_estimate">4.9065649</td>
-<td class="gt_row gt_right" headers="mean_se">1.5102823</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #65EF00; color: #000000">0.90</td>
-</tr>
-<tr class="even">
-<td class="gt_row gt_left" headers="term">genre_i</td>
-<td class="gt_row gt_right" headers="n_subj">50</td>
-<td class="gt_row gt_right" headers="n_pop">10</td>
-<td class="gt_row gt_right" headers="n_rock">40</td>
-<td class="gt_row gt_right" headers="beta_1">1</td>
-<td class="gt_row gt_right" headers="mean_estimate">0.8624299</td>
-<td class="gt_row gt_right" headers="mean_se">1.2642872</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #F55100; color: #FFFFFF">0.12</td>
-</tr>
-<tr class="odd">
-<td class="gt_row gt_left" headers="term">genre_i</td>
-<td class="gt_row gt_right" headers="n_subj">50</td>
-<td class="gt_row gt_right" headers="n_pop">10</td>
-<td class="gt_row gt_right" headers="n_rock">40</td>
-<td class="gt_row gt_right" headers="beta_1">2</td>
-<td class="gt_row gt_right" headers="mean_estimate">1.8966771</td>
-<td class="gt_row gt_right" headers="mean_se">1.2632429</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #E48000; color: #FFFFFF">0.29</td>
-</tr>
-<tr class="even">
-<td class="gt_row gt_left" headers="term">genre_i</td>
-<td class="gt_row gt_right" headers="n_subj">50</td>
-<td class="gt_row gt_right" headers="n_pop">10</td>
-<td class="gt_row gt_right" headers="n_rock">40</td>
-<td class="gt_row gt_right" headers="beta_1">3</td>
-<td class="gt_row gt_right" headers="mean_estimate">2.9027209</td>
-<td class="gt_row gt_right" headers="mean_se">1.2631343</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #B8BD00; color: #000000">0.60</td>
-</tr>
-<tr class="odd">
-<td class="gt_row gt_left" headers="term">genre_i</td>
-<td class="gt_row gt_right" headers="n_subj">50</td>
-<td class="gt_row gt_right" headers="n_pop">10</td>
-<td class="gt_row gt_right" headers="n_rock">40</td>
-<td class="gt_row gt_right" headers="beta_1">4</td>
-<td class="gt_row gt_right" headers="mean_estimate">3.8651279</td>
-<td class="gt_row gt_right" headers="mean_se">1.2660563</td>
+<td class="gt_row gt_right" headers="mean_estimate">5.0167874</td>
+<td class="gt_row gt_right" headers="mean_se">1.5132837</td>
 <td class="gt_row gt_right" headers="power" style="background-color: #72EA00; color: #000000">0.87</td>
 </tr>
 <tr class="even">
@@ -2087,50 +2047,90 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_subj">50</td>
 <td class="gt_row gt_right" headers="n_pop">10</td>
 <td class="gt_row gt_right" headers="n_rock">40</td>
-<td class="gt_row gt_right" headers="beta_1">5</td>
-<td class="gt_row gt_right" headers="mean_estimate">4.8895942</td>
-<td class="gt_row gt_right" headers="mean_se">1.2672331</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #2EFC00; color: #000000">0.98</td>
+<td class="gt_row gt_right" headers="beta_1">1</td>
+<td class="gt_row gt_right" headers="mean_estimate">0.9416347</td>
+<td class="gt_row gt_right" headers="mean_se">1.2425070</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #F74A00; color: #FFFFFF">0.10</td>
 </tr>
 <tr class="odd">
 <td class="gt_row gt_left" headers="term">genre_i</td>
 <td class="gt_row gt_right" headers="n_subj">50</td>
-<td class="gt_row gt_right" headers="n_pop">40</td>
-<td class="gt_row gt_right" headers="n_rock">10</td>
-<td class="gt_row gt_right" headers="beta_1">1</td>
-<td class="gt_row gt_right" headers="mean_estimate">0.9841072</td>
-<td class="gt_row gt_right" headers="mean_se">1.2649185</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #F15E00; color: #FFFFFF">0.16</td>
+<td class="gt_row gt_right" headers="n_pop">10</td>
+<td class="gt_row gt_right" headers="n_rock">40</td>
+<td class="gt_row gt_right" headers="beta_1">2</td>
+<td class="gt_row gt_right" headers="mean_estimate">1.9454068</td>
+<td class="gt_row gt_right" headers="mean_se">1.2428036</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #DA9100; color: #FFFFFF">0.37</td>
 </tr>
 <tr class="even">
 <td class="gt_row gt_left" headers="term">genre_i</td>
 <td class="gt_row gt_right" headers="n_subj">50</td>
-<td class="gt_row gt_right" headers="n_pop">40</td>
-<td class="gt_row gt_right" headers="n_rock">10</td>
-<td class="gt_row gt_right" headers="beta_1">2</td>
-<td class="gt_row gt_right" headers="mean_estimate">1.9939159</td>
-<td class="gt_row gt_right" headers="mean_se">1.2657070</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #DD8D00; color: #FFFFFF">0.35</td>
-</tr>
-<tr class="odd">
-<td class="gt_row gt_left" headers="term">genre_i</td>
-<td class="gt_row gt_right" headers="n_subj">50</td>
-<td class="gt_row gt_right" headers="n_pop">40</td>
-<td class="gt_row gt_right" headers="n_rock">10</td>
+<td class="gt_row gt_right" headers="n_pop">10</td>
+<td class="gt_row gt_right" headers="n_rock">40</td>
 <td class="gt_row gt_right" headers="beta_1">3</td>
-<td class="gt_row gt_right" headers="mean_estimate">3.0015429</td>
-<td class="gt_row gt_right" headers="mean_se">1.2671452</td>
+<td class="gt_row gt_right" headers="mean_estimate">2.9326841</td>
+<td class="gt_row gt_right" headers="mean_se">1.2464191</td>
 <td class="gt_row gt_right" headers="power" style="background-color: #AEC600; color: #000000">0.65</td>
 </tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="term">genre_i</td>
+<td class="gt_row gt_right" headers="n_subj">50</td>
+<td class="gt_row gt_right" headers="n_pop">10</td>
+<td class="gt_row gt_right" headers="n_rock">40</td>
+<td class="gt_row gt_right" headers="beta_1">4</td>
+<td class="gt_row gt_right" headers="mean_estimate">3.9354501</td>
+<td class="gt_row gt_right" headers="mean_se">1.2460817</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #7AE700; color: #000000">0.85</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="term">genre_i</td>
+<td class="gt_row gt_right" headers="n_subj">50</td>
+<td class="gt_row gt_right" headers="n_pop">10</td>
+<td class="gt_row gt_right" headers="n_rock">40</td>
+<td class="gt_row gt_right" headers="beta_1">5</td>
+<td class="gt_row gt_right" headers="mean_estimate">4.9440455</td>
+<td class="gt_row gt_right" headers="mean_se">1.2448570</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #49F700; color: #000000">0.95</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="term">genre_i</td>
+<td class="gt_row gt_right" headers="n_subj">50</td>
+<td class="gt_row gt_right" headers="n_pop">40</td>
+<td class="gt_row gt_right" headers="n_rock">10</td>
+<td class="gt_row gt_right" headers="beta_1">1</td>
+<td class="gt_row gt_right" headers="mean_estimate">0.9792428</td>
+<td class="gt_row gt_right" headers="mean_se">1.2509526</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #F55100; color: #FFFFFF">0.12</td>
+</tr>
+<tr class="even">
+<td class="gt_row gt_left" headers="term">genre_i</td>
+<td class="gt_row gt_right" headers="n_subj">50</td>
+<td class="gt_row gt_right" headers="n_pop">40</td>
+<td class="gt_row gt_right" headers="n_rock">10</td>
+<td class="gt_row gt_right" headers="beta_1">2</td>
+<td class="gt_row gt_right" headers="mean_estimate">1.9984915</td>
+<td class="gt_row gt_right" headers="mean_se">1.2501776</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #DE8B00; color: #FFFFFF">0.34</td>
+</tr>
+<tr class="odd">
+<td class="gt_row gt_left" headers="term">genre_i</td>
+<td class="gt_row gt_right" headers="n_subj">50</td>
+<td class="gt_row gt_right" headers="n_pop">40</td>
+<td class="gt_row gt_right" headers="n_rock">10</td>
+<td class="gt_row gt_right" headers="beta_1">3</td>
+<td class="gt_row gt_right" headers="mean_estimate">2.9932592</td>
+<td class="gt_row gt_right" headers="mean_se">1.2498336</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #A8CB00; color: #000000">0.68</td>
+</tr>
 <tr class="even">
 <td class="gt_row gt_left" headers="term">genre_i</td>
 <td class="gt_row gt_right" headers="n_subj">50</td>
 <td class="gt_row gt_right" headers="n_pop">40</td>
 <td class="gt_row gt_right" headers="n_rock">10</td>
 <td class="gt_row gt_right" headers="beta_1">4</td>
-<td class="gt_row gt_right" headers="mean_estimate">3.9797475</td>
-<td class="gt_row gt_right" headers="mean_se">1.2674823</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #7DE600; color: #000000">0.84</td>
+<td class="gt_row gt_right" headers="mean_estimate">4.0102264</td>
+<td class="gt_row gt_right" headers="mean_se">1.2489660</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #6EEC00; color: #000000">0.88</td>
 </tr>
 <tr class="odd">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -2138,9 +2138,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">40</td>
 <td class="gt_row gt_right" headers="n_rock">10</td>
 <td class="gt_row gt_right" headers="beta_1">5</td>
-<td class="gt_row gt_right" headers="mean_estimate">4.9817978</td>
-<td class="gt_row gt_right" headers="mean_se">1.2696729</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #41F900; color: #000000">0.96</td>
+<td class="gt_row gt_right" headers="mean_estimate">4.9832492</td>
+<td class="gt_row gt_right" headers="mean_se">1.2485643</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #38FA00; color: #000000">0.97</td>
 </tr>
 <tr class="even">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -2148,9 +2148,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">40</td>
 <td class="gt_row gt_right" headers="n_rock">40</td>
 <td class="gt_row gt_right" headers="beta_1">1</td>
-<td class="gt_row gt_right" headers="mean_estimate">0.9598020</td>
-<td class="gt_row gt_right" headers="mean_se">0.9119593</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #EC6C00; color: #FFFFFF">0.21</td>
+<td class="gt_row gt_right" headers="mean_estimate">1.0318179</td>
+<td class="gt_row gt_right" headers="mean_se">0.9085048</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #EE6700; color: #FFFFFF">0.19</td>
 </tr>
 <tr class="odd">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -2158,9 +2158,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">40</td>
 <td class="gt_row gt_right" headers="n_rock">40</td>
 <td class="gt_row gt_right" headers="beta_1">2</td>
-<td class="gt_row gt_right" headers="mean_estimate">1.9561492</td>
-<td class="gt_row gt_right" headers="mean_se">0.9104041</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #C2B200; color: #000000">0.54</td>
+<td class="gt_row gt_right" headers="mean_estimate">2.0048705</td>
+<td class="gt_row gt_right" headers="mean_se">0.9096624</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #B6BF00; color: #000000">0.61</td>
 </tr>
 <tr class="even">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -2168,9 +2168,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">40</td>
 <td class="gt_row gt_right" headers="n_rock">40</td>
 <td class="gt_row gt_right" headers="beta_1">3</td>
-<td class="gt_row gt_right" headers="mean_estimate">2.9585712</td>
-<td class="gt_row gt_right" headers="mean_se">0.9104250</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #60F100; color: #000000">0.91</td>
+<td class="gt_row gt_right" headers="mean_estimate">3.0140292</td>
+<td class="gt_row gt_right" headers="mean_se">0.9082560</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #6EEC00; color: #000000">0.88</td>
 </tr>
 <tr class="odd">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -2178,9 +2178,9 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">40</td>
 <td class="gt_row gt_right" headers="n_rock">40</td>
 <td class="gt_row gt_right" headers="beta_1">4</td>
-<td class="gt_row gt_right" headers="mean_estimate">3.9730888</td>
-<td class="gt_row gt_right" headers="mean_se">0.9107468</td>
-<td class="gt_row gt_right" headers="power" style="background-color: #1FFD00; color: #000000">0.99</td>
+<td class="gt_row gt_right" headers="mean_estimate">4.0018918</td>
+<td class="gt_row gt_right" headers="mean_se">0.9075112</td>
+<td class="gt_row gt_right" headers="power" style="background-color: #00FF00; color: #000000">1.00</td>
 </tr>
 <tr class="even">
 <td class="gt_row gt_left" headers="term">genre_i</td>
@@ -2188,8 +2188,8 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <td class="gt_row gt_right" headers="n_pop">40</td>
 <td class="gt_row gt_right" headers="n_rock">40</td>
 <td class="gt_row gt_right" headers="beta_1">5</td>
-<td class="gt_row gt_right" headers="mean_estimate">4.9661969</td>
-<td class="gt_row gt_right" headers="mean_se">0.9115205</td>
+<td class="gt_row gt_right" headers="mean_estimate">5.0135993</td>
+<td class="gt_row gt_right" headers="mean_se">0.9073337</td>
 <td class="gt_row gt_right" headers="power" style="background-color: #00FF00; color: #000000">1.00</td>
 </tr>
 </tbody>

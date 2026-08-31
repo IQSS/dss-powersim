@@ -513,12 +513,27 @@ window.Quarto = {
 </header>
 
 
-<p>To begin with, the simulation based power analysis in Python just follows the structure in the last section in R, and there are repetitions in the texts to describe the method. However, there are differences between the two languages and we will specify those discrepancy in the following “note” parts.</p>
+<p>This chapter follows the same structure as the R chapter, and much of the prose is deliberately repeated so that it can be read on its own. Where the two languages differ, a note says so.</p>
 <section id="setup" class="level2">
 <h2 class="anchored" data-anchor-id="setup">Setup</h2>
-<p>Note: There are two differences between Python and the R language: 1. R uses the p_load function to automatically install missing libraries and import libraries. Python needs to manually configure the environment. If the library is missing, you can use “! pip install [package_name]” to install; 2. The R has set parallelism in the setup part, but Python uses the dask package to perform parallel computing in the simulation part.</p>
+<div class="callout callout-style-simple callout-note callout-titled" title="Two differences from the R chapter">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Two differences from the R chapter
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li>R uses <code>p_load()</code> to install any missing libraries and load them in one step. In Python the environment is configured separately — here by <code>uv sync</code> from the materials folder — so the imports below assume the packages are already installed.</li>
+<li>The R chapter sets up parallelism once in its setup section; this chapter uses <code>dask</code> at the point where the simulations are run.</li>
+</ol>
+</div>
+</div>
 <p>We will need to use several Python packages to optimize our workflow and fit mixed effects models.</p>
-<div id="63a0293f" class="cell" data-execution_count="2">
+<div id="30ac577d" class="cell" data-execution_count="2">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> statsmodels.formula.api <span class="im">as</span> smf</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
@@ -531,18 +546,33 @@ window.Quarto = {
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> itertools <span class="im">import</span> product</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>We will also set the pseudo-random number generator seed to 2138 to make the stochastic components of our simulations reproducible.</p>
-<div id="88485fd2" class="cell" data-execution_count="3">
+<div id="e6fe3db9" class="cell" data-execution_count="3">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">2138</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="data-simulation-step-by-step" class="level2">
 <h2 class="anchored" data-anchor-id="data-simulation-step-by-step">Data simulation step by step</h2>
 <p>To give an overview of the power simulation task, we will simulate data from a design with crossed random factors of subjects and songs (see Power of What? for design details), fit a model to the simulated data, recover from the model output the parameter values we put in, calculate power, and finally automate the whole process so that we can calculate power for different effect sizes. Much of the general workflow here is borrowed from DeBruine &amp; Barr (2021) Understanding Mixed-Effects Models through Simulation. We’ll start by writing code that simulates datasets under the alternative hypothesis.</p>
-<p>Note: There are two differences between Python and the R: 1. We use the package of “statsmodels” to set up the mixd effect model in Python. However, this package doesn’t have extension to show the correlation between the random intercept and the random slope of the subject like that in R; 2. There’s no “broom.mixed::tidy()” function in Python and that’s why the output is incomplete.</p>
+<div class="callout callout-style-simple callout-note callout-titled" title="Two differences from the R chapter">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Two differences from the R chapter
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li>The mixed model is fitted with <code>statsmodels</code>, which does not report the correlation between a subject’s random intercept and random slope, so <code>rho</code> cannot be recovered from the fit as it can in R.</li>
+<li>There is no equivalent of <code>broom.mixed::tidy()</code>, so the results are pulled out of the summary table by hand rather than arriving as a tidy data frame.</li>
+</ol>
+</div>
+</div>
 <section id="establish-the-simulation-parameters" class="level3">
 <h3 class="anchored" data-anchor-id="establish-the-simulation-parameters">Establish the simulation parameters</h3>
 <p>Before we start, let’s set some global parameters for our power simulations. Since simulations can take a long time to run, we’ll use 30 replications here as an example, but we recommend increasing this number to at least 1000 replications for a more accurate final power calculation.</p>
-<div id="3b462bec" class="cell" data-execution_count="4">
+<div id="244f575e" class="cell" data-execution_count="4">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># number of simulation replicates for power calculation</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>reps <span class="op">=</span> <span class="dv">30</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -552,8 +582,8 @@ window.Quarto = {
 </section>
 <section id="establish-the-data-generating-parameters" class="level3">
 <h3 class="anchored" data-anchor-id="establish-the-data-generating-parameters">Establish the data-generating parameters</h3>
-<p>The first thing to do is to set up the parameters that govern the process we assume gave rise to the data - the data-generating process, or DGP. We previously decided upon the the data-generating parameters (see Power of What?), so we just need to code them here.</p>
-<div id="de0035a8" class="cell" data-execution_count="5">
+<p>The first thing to do is to set up the parameters that govern the process we assume gave rise to the data - the data-generating process, or DGP. We previously decided upon the data-generating parameters (see Power of What?), so we just need to code them here.</p>
+<div id="efc7c4ff" class="cell" data-execution_count="5">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># set all data-generating parameters</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>beta_0 <span class="op">=</span> <span class="dv">60</span>  <span class="co"># intercept; i.e., the grand mean</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>beta_1 <span class="op">=</span> <span class="dv">5</span>   <span class="co"># slope; i.e, effect of category</span></span>
@@ -567,7 +597,7 @@ window.Quarto = {
 <section id="simulate-the-sampling-process" class="level3">
 <h3 class="anchored" data-anchor-id="simulate-the-sampling-process">Simulate the sampling process</h3>
 <p>Next, we will simulate the sampling process for the data. First, let’s define parameters related to the number of observations.</p>
-<div id="5302f6d1" class="cell" data-execution_count="6">
+<div id="79d36e5a" class="cell" data-execution_count="6">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># set number of subjects and songs</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>n_subj <span class="op">=</span> <span class="dv">25</span>  <span class="co"># number of subjects</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>n_pop <span class="op">=</span> <span class="dv">15</span>   <span class="co"># number of songs in pop category</span></span>
@@ -575,8 +605,8 @@ window.Quarto = {
 </div>
 <section id="simulate-the-sampling-of-songs" class="level4">
 <h4 class="anchored" data-anchor-id="simulate-the-sampling-of-songs">Simulate the sampling of songs</h4>
-<p>We need to create a table listing each song (i), which category it is in (rock or pop), and its random effect <span class="math inline">\(O_{0i}\)</span>. The latter is sampled from a univariate normal distribution using the function np.random.normal().</p>
-<div id="10ff30b9" class="cell" data-execution_count="7">
+<p>We need to create a table listing each song <span class="math inline">\(i\)</span>, which category it is in (rock or pop), and its random effect <span class="math inline">\(O_{0i}\)</span>. The latter is sampled from a univariate normal distribution using the function np.random.normal().</p>
+<div id="15001d41" class="cell" data-execution_count="7">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># simulate a sample of songs</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>songs <span class="op">=</span> pd.DataFrame({</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'song_id'</span>: <span class="bu">range</span>(<span class="dv">1</span>, n_pop <span class="op">+</span> n_rock <span class="op">+</span> <span class="dv">1</span>),</span>
@@ -605,7 +635,7 @@ window.Quarto = {
 <h4 class="anchored" data-anchor-id="simulate-the-sampling-of-subjects">Simulate the sampling of subjects</h4>
 <p>Now we simulate the sampling of participants, which results in table listing each individual and their two correlated random effects (a random intercept and random slope). To do this, we must sample <span class="math inline">\(T_{0j} ,T_{1j}\)</span> pairs - one for each subject - from a bivariate normal distribution.</p>
 <p>We will use the function np.random.multivariate_normal(), which generates a table of n simulated values from a multivariate normal distribution by specifying the means and covariance matrix(cov).</p>
-<div id="1e631ad7" class="cell" data-execution_count="8">
+<div id="f6cbcfd7" class="cell" data-execution_count="8">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># simulate a sample of subjects</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># sample from a multivariate normal distribution</span></span>
@@ -636,7 +666,7 @@ window.Quarto = {
 <section id="check-the-simulated-values" class="level4">
 <h4 class="anchored" data-anchor-id="check-the-simulated-values">Check the simulated values</h4>
 <p>Let’s do a quick sanity check by comparing our simulated values to the parameters we used as inputs. Because the sampling process is stochastic, we shouldn’t expect that these will exactly match for any given run of the simulation.</p>
-<div id="f7a80d30" class="cell" data-execution_count="9">
+<div id="56134fdf" class="cell" data-execution_count="9">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>check_values <span class="op">=</span> pd.DataFrame({</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'parameter'</span>: [<span class="st">'omega_0'</span>, <span class="st">'tau_0'</span>, <span class="st">'tau_1'</span>, <span class="st">'rho'</span>],</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'value'</span>: [omega_0, tau_0, tau_1, rho],</span>
@@ -655,8 +685,8 @@ window.Quarto = {
 </section>
 <section id="simulate-trials" class="level4">
 <h4 class="anchored" data-anchor-id="simulate-trials">Simulate trials</h4>
-<p>Since all subjects rate all songs (i.e., the design is fully crossed) we can set up a table of trials by including every possible combination of the rows in the subjects and songs tables. Each trial has random error associated with it, reflecting fluctuations in trial-by-trial ratings due to unkown factors. We simulate this by sampling values from a univariate normal distribution with a mean of 0 and a standard deviation of sigma.</p>
-<div id="7eb96412" class="cell" data-execution_count="10">
+<p>Since all subjects rate all songs (i.e., the design is fully crossed) we can set up a table of trials by including every possible combination of the rows in the subjects and songs tables. Each trial has random error associated with it, reflecting fluctuations in trial-by-trial ratings due to unknown factors. We simulate this by sampling values from a univariate normal distribution with a mean of 0 and a standard deviation of sigma.</p>
+<div id="68ef0a7b" class="cell" data-execution_count="10">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># cross subject and song IDs; add an error term</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>trials <span class="op">=</span> subjects.assign(key<span class="op">=</span><span class="dv">1</span>).merge(songs.assign(key<span class="op">=</span><span class="dv">1</span>), on<span class="op">=</span><span class="st">'key'</span>).drop(columns<span class="op">=</span><span class="st">'key'</span>)</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>trials[<span class="st">'e_ij'</span>] <span class="op">=</span> np.random.normal(<span class="dv">0</span>, sigma, <span class="bu">len</span>(trials))</span>
@@ -680,7 +710,7 @@ window.Quarto = {
 <section id="calculate-response-values" class="level4">
 <h4 class="anchored" data-anchor-id="calculate-response-values">Calculate response values</h4>
 <p>With this resulting trials table, in combination with the constants <span class="math inline">\(\beta_0\)</span> and <span class="math inline">\(\beta_1\)</span>, we have the full set of values that we need to compute the response variable liking_ij according the linear model we defined previously (see Power of What?).</p>
-<div id="f7e0295f" class="cell" data-execution_count="11">
+<div id="7f7ccc5c" class="cell" data-execution_count="11">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>dat_sim <span class="op">=</span> trials.copy()</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>dat_sim[<span class="st">'liking_ij'</span>] <span class="op">=</span> beta_0 <span class="op">+</span> dat_sim[<span class="st">'T_0j'</span>] <span class="op">+</span> dat_sim[<span class="st">'O_0i'</span>] <span class="op">+</span> (beta_1 <span class="op">+</span> dat_sim[<span class="st">'T_1j'</span>]) <span class="op">*</span> dat_sim[<span class="st">'genre_i'</span>] <span class="op">+</span> dat_sim[<span class="st">'e_ij'</span>]</span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>dat_sim <span class="op">=</span> dat_sim[[<span class="st">'subj_id'</span>, <span class="st">'song_id'</span>, <span class="st">'category'</span>, <span class="st">'genre_i'</span>, <span class="st">'liking_ij'</span>]]</span>
@@ -704,7 +734,7 @@ window.Quarto = {
 <section id="plot-the-data" class="level4">
 <h4 class="anchored" data-anchor-id="plot-the-data">Plot the data</h4>
 <p>Let’s visualize the distribution of the response variable for each of the two song genres and superimpose the simulated parameter estimates for the means of these two groups.</p>
-<div id="61e859d5" class="cell" data-execution_count="12">
+<div id="dd4c906a" class="cell" data-execution_count="12">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>palette <span class="op">=</span> {<span class="st">'pop'</span>: <span class="st">'orange'</span>, <span class="st">'rock'</span>: <span class="st">'dodgerblue'</span>}</span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="co"># actual data</span></span>
@@ -734,14 +764,14 @@ window.Quarto = {
 <p>The terms in vc_formula are as follows:</p>
 <p>0 + C(song_id) specifies a song-specific random intercept O_0i. 0 + C(subject_id) specifies a subject-specific random intercept T_0j. 0 + C(subject_id):genre_i specifies the subject specific random slope of the genre category T_1j.</p>
 <p>However, due to the inability of the function mixedlm(), the module did not indicate the correlation between subject-specific random intercept and the subject specific random slope of the genre category.</p>
-<div id="0792f7c9" class="cell" data-execution_count="13">
+<div id="ba50ed84" class="cell" data-execution_count="13">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># fit a linear mixed-effects model to data</span></span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>form <span class="op">=</span> <span class="st">'liking_ij ~ 1 + genre_i'</span></span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>dat_sim[<span class="st">'groups'</span>] <span class="op">=</span> <span class="dv">1</span></span>
 <span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>vcf <span class="op">=</span> {<span class="st">'song_id'</span>:<span class="st">'0 + C(song_id)'</span>, <span class="st">'subj_id'</span>:<span class="st">'0 + C(subj_id)'</span>, <span class="st">'genre_i'</span>: <span class="st">'0 + C(subj_id):genre_i'</span>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Now we can estimate the model.</p>
-<div id="22470cc7" class="cell" data-execution_count="14">
+<div id="0a5c2c91" class="cell" data-execution_count="14">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> smf.mixedlm(form, groups<span class="op">=</span>dat_sim[<span class="st">'groups'</span>], vc_formula<span class="op">=</span>vcf, re_formula<span class="op">=</span><span class="st">'0'</span>, data<span class="op">=</span>dat_sim)</span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>mod_sim <span class="op">=</span> model.fit()</span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -767,7 +797,7 @@ subj_id Var   33.748    1.353
 </code></pre>
 </div>
 </div>
-<div id="034d6122" class="cell" data-execution_count="15">
+<div id="363ce56f" class="cell" data-execution_count="15">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>formatted_sim_result <span class="op">=</span> pd.DataFrame({</span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">'term'</span>: [<span class="st">'Intercept'</span>, <span class="st">'genre_i'</span>, <span class="st">''</span>, <span class="st">''</span>, <span class="st">''</span>, <span class="st">''</span>, <span class="st">''</span>],</span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'parameter'</span>: [<span class="st">'beta_0'</span>, <span class="st">'beta_1'</span>, <span class="st">'omega_0'</span>, <span class="st">'tau_0'</span>, <span class="st">'rho'</span>, <span class="st">'tau_1'</span>, <span class="st">'sigma'</span>],</span>
@@ -854,7 +884,7 @@ subj_id Var   33.748    1.353
 <section id="data-simulation-automated" class="level2">
 <h2 class="anchored" data-anchor-id="data-simulation-automated">Data simulation automated</h2>
 <p>Now that we’ve tested the data generating code, we can put it into a function so that it’s easy to run it repeatedly.</p>
-<div id="96629336" class="cell" data-execution_count="16">
+<div id="53fb64f7" class="cell" data-execution_count="16">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> sim_data(n_subj<span class="op">=</span><span class="dv">25</span>, n_pop<span class="op">=</span><span class="dv">15</span>, n_rock<span class="op">=</span><span class="dv">15</span>, beta_0<span class="op">=</span><span class="dv">60</span>, beta_1<span class="op">=</span><span class="dv">5</span>, omega_0<span class="op">=</span><span class="dv">3</span>, tau_0<span class="op">=</span><span class="dv">7</span>, tau_1<span class="op">=</span><span class="dv">4</span>, rho<span class="op">=</span><span class="fl">0.2</span>, sigma<span class="op">=</span><span class="dv">8</span>):</span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    songs <span class="op">=</span> pd.DataFrame({</span>
 <span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>        <span class="st">'song_id'</span>: np.arange(n_pop <span class="op">+</span> n_rock),</span>
@@ -877,7 +907,7 @@ subj_id Var   33.748    1.353
 <section id="power-calculation-single-run" class="level2">
 <h2 class="anchored" data-anchor-id="power-calculation-single-run">Power calculation single run</h2>
 <p>We can wrap the data generating function and modeling code in a new function single_run() that returns a table of the analysis results for a single simulation run.</p>
-<div id="dfb0c7d6" class="cell" data-execution_count="17">
+<div id="398fd5fb" class="cell" data-execution_count="17">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> single_run(n_subj<span class="op">=</span><span class="dv">25</span>, n_pop<span class="op">=</span><span class="dv">15</span>, n_rock<span class="op">=</span><span class="dv">15</span>, beta_0<span class="op">=</span><span class="dv">60</span>, beta_1<span class="op">=</span><span class="dv">5</span>, omega_0<span class="op">=</span><span class="dv">3</span>, tau_0<span class="op">=</span><span class="dv">7</span>, tau_1<span class="op">=</span><span class="dv">4</span>, rho<span class="op">=</span><span class="fl">0.2</span>, sigma<span class="op">=</span><span class="dv">8</span>):</span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    dat_sim <span class="op">=</span> sim_data(n_subj, n_pop, n_rock, beta_0, beta_1, omega_0, tau_0, tau_1, rho, sigma)</span>
 <span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -891,7 +921,7 @@ subj_id Var   33.748    1.353
 <span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> df[[<span class="st">'Coef.'</span>, <span class="st">'Std.Err.'</span>, <span class="st">'p_value'</span>]]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Let’s test that our new single_run() function performs as expected.</p>
-<div id="fdde89fa" class="cell" data-execution_count="18">
+<div id="427c97e0" class="cell" data-execution_count="18">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># run one model with default parameters</span></span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>single_run()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display" data-execution_count="18">
@@ -944,7 +974,7 @@ subj_id Var   33.748    1.353
 </div>
 </div>
 </div>
-<div id="fe8eaf03" class="cell" data-execution_count="19">
+<div id="51ca9424" class="cell" data-execution_count="19">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># run one model with new parameters</span></span>
 <span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>single_run(n_pop <span class="op">=</span> <span class="dv">10</span>, n_rock <span class="op">=</span> <span class="dv">50</span>, beta_1 <span class="op">=</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display" data-execution_count="19">
@@ -1002,8 +1032,23 @@ subj_id Var   33.748    1.353
 <h2 class="anchored" data-anchor-id="power-calculation-automated">Power calculation automated</h2>
 <p>To get an accurate estimation of power, we need to run the simulation many times. Here we use the package dask to parallelize existing code to speed-up iterative processes.</p>
 <p>We use dask.delayed function to decorate single_run() so that it operates lazily, then call the delayed version repeatedly using for statement, and finally call dask.compute function to get the result of simulations.</p>
-<p>Note: There are two differences between Python and the R: 1. The R uses the “future_map_dfr() function” to use the single_run() function in a loop, and Python directly uses “for” structure to do loop; 2. The R sets parallel computing in the setup part, while the Python uses the “dask” library for parallel computing.</p>
-<div id="44386b17" class="cell" data-execution_count="20">
+<div class="callout callout-style-simple callout-note callout-titled" title="Two differences from the R chapter">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Two differences from the R chapter
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li>R loops with <code>future_map_dfr()</code>; here a plain <code>for</code> loop builds a list of delayed calls.</li>
+<li>R configures parallelism once at the top; here <code>dask</code> does it at the point of use.</li>
+</ol>
+</div>
+</div>
+<div id="c7f51145" class="cell" data-execution_count="20">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>client <span class="op">=</span> Client()</span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="at">@dask.delayed</span></span>
@@ -1017,8 +1062,8 @@ subj_id Var   33.748    1.353
 <span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>sims_df <span class="op">=</span> pd.concat(sims_result).reset_index().rename(columns<span class="op">=</span>{<span class="st">'index'</span>:<span class="st">'term'</span>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>We can finally calculate power for our parameter of interest <span class="math inline">\(\beta_1\)</span> denoted in the model output table as the term <span class="math inline">\(genre_{i}\)</span> by filtering to keep only that term and the calculating the proportion of times the (p)-value is below the alpha (0.05) threshold.</p>
-<div id="43e55413" class="cell" data-execution_count="21">
+<p>We can finally calculate power for our parameter of interest <span class="math inline">\(\beta_1\)</span> denoted in the model output table as the term <span class="math inline">\(genre_{i}\)</span> by filtering to keep only that term and then calculating the proportion of times the <span class="math inline">\(p\)</span>-value is below the alpha (0.05) threshold.</p>
+<div id="401784fa" class="cell" data-execution_count="21">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>genre_i_sims <span class="op">=</span> sims_df[sims_df[<span class="st">'term'</span>] <span class="op">==</span> <span class="st">'genre_i'</span>]</span>
 <span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>mean_estimate <span class="op">=</span> genre_i_sims[<span class="st">'Coef.'</span>].astype(<span class="bu">float</span>).mean()</span>
 <span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>mean_se <span class="op">=</span> genre_i_sims[<span class="st">'Std.Err.'</span>].astype(<span class="bu">float</span>).mean()</span>
@@ -1028,24 +1073,24 @@ subj_id Var   33.748    1.353
 <span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Mean standard error: </span><span class="sc">{</span>mean_se<span class="sc">}</span><span class="ss">"</span>)</span>
 <span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Power: </span><span class="sc">{</span>power<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Mean estimate: 5.774566666666666
-Mean standard error: 1.4899333333333336
+<pre><code>Mean estimate: 4.771066666666666
+Mean standard error: 1.4483666666666666
 Power: 0.9666666666666667</code></pre>
 </div>
 </div>
 <section id="check-false-positive-rate" class="level3">
 <h3 class="anchored" data-anchor-id="check-false-positive-rate">Check false positive rate</h3>
-<p>We can do a sanity check to see if our simulation is performing as expected by checking the false positive rate (Type I error rate). We set the effect of genre_ij (beta_1) to 0 to calculate the false positive rate, which is the probability of concluding there is an effect when there is no actual effect in the population.</p>
-<div id="49802a8d" class="cell" data-execution_count="22">
+<p>We can do a sanity check to see if our simulation is performing as expected by checking the false positive rate (Type I error rate). We set the effect of genre_i (beta_1) to 0 to calculate the false positive rate, which is the probability of concluding there is an effect when there is no actual effect in the population.</p>
+<div id="a54d6bb8" class="cell" data-execution_count="22">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>sims_fp <span class="op">=</span> [delayed_single_run(beta_1<span class="op">=</span><span class="dv">0</span>) <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(reps)]</span>
 <span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>sims_fp_result <span class="op">=</span> dask.compute(<span class="op">*</span>sims_fp)</span>
 <span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>sims_fp_df <span class="op">=</span> pd.concat(sims_fp_result).reset_index().rename(columns<span class="op">=</span>{<span class="st">'index'</span>:<span class="st">'term'</span>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<div id="0bef4409" class="cell" data-execution_count="23">
+<div id="0186676c" class="cell" data-execution_count="23">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>(sims_fp_df[sims_fp_df[<span class="st">'term'</span>] <span class="op">==</span> <span class="st">'genre_i'</span>][<span class="st">'p_value'</span>].astype(<span class="bu">float</span>) <span class="op">&lt;</span> alpha).mean()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display" data-execution_count="23">
-<pre><code>np.float64(0.03333333333333333)</code></pre>
+<pre><code>np.float64(0.1)</code></pre>
 </div>
 </div>
 <p>Ideally, the false positive rate will be equal to alpha, which we set at 0.05.</p>
@@ -1059,8 +1104,8 @@ Power: 0.9666666666666667</code></pre>
 <li><p>Python uses the “product” function to permutate and combine parameters, and then use “loop” and “dask.compute” to perform parallel computing;</p></li>
 <li><p>Python couldn’t repeatedly use parameter_search() and instead uses two layers of loop to realize multiple simulations of each permutation and combination of parameters.</p></li>
 </ol>
-<div id="b6f83207" class="cell" data-execution_count="24">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a> <span class="co"># grid of paramater values of interest</span></span>
+<div id="12e77763" class="cell" data-execution_count="24">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a> <span class="co"># grid of parameter values of interest</span></span>
 <span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>params <span class="op">=</span> {</span>
 <span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">'n_subj'</span>: [<span class="dv">10</span>, <span class="dv">50</span>],</span>
 <span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">'n_pop'</span>: [<span class="dv">10</span>, <span class="dv">40</span>],</span>
@@ -1069,7 +1114,7 @@ Power: 0.9666666666666667</code></pre>
 <span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>We can now wrap delayed_single_run() function within a more general function parameter_search() that takes the grid of parameter values as input and uses the for statement to iterate over each row of parameter values in pgrid and feed them into delayed_single_run().</p>
-<div id="b104cc64" class="cell" data-execution_count="25">
+<div id="dc7ee0be" class="cell" data-execution_count="25">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># fit the models over the parameters</span></span>
 <span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> parameter_search(params):</span>
 <span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    sims <span class="op">=</span> []</span>
@@ -1086,7 +1131,7 @@ Power: 0.9666666666666667</code></pre>
 <span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> pd.concat(dask.compute(<span class="op">*</span>sims)).reset_index().rename(columns<span class="op">=</span>{<span class="st">'index'</span>:<span class="st">'term'</span>})</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>If we call parameter_search() it will return a single replication of simulations for each combination of parameter values in pgrid.</p>
-<div id="0ea6e5f9" class="cell" data-execution_count="26">
+<div id="9e39805c" class="cell" data-execution_count="26">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>parameter_search(params)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display" data-execution_count="26">
 <div>
@@ -1110,9 +1155,9 @@ Power: 0.9666666666666667</code></pre>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">0</th>
 <td>Intercept</td>
-<td>60.605</td>
-<td>2.520</td>
-<td>9.126096e-128</td>
+<td>57.148</td>
+<td>2.038</td>
+<td>5.957905e-173</td>
 <td>10</td>
 <td>10</td>
 <td>10</td>
@@ -1121,9 +1166,9 @@ Power: 0.9666666666666667</code></pre>
 <tr class="even">
 <th data-quarto-table-cell-role="th">1</th>
 <td>genre_i</td>
-<td>0.568</td>
-<td>2.287</td>
-<td>8.038544e-01</td>
+<td>0.551</td>
+<td>2.470</td>
+<td>8.233646e-01</td>
 <td>10</td>
 <td>10</td>
 <td>10</td>
@@ -1132,9 +1177,9 @@ Power: 0.9666666666666667</code></pre>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">2</th>
 <td>genre_i Var</td>
-<td>8.783</td>
-<td>1.255</td>
-<td>3.788364e-01</td>
+<td>22.773</td>
+<td>2.124</td>
+<td>1.517333e-01</td>
 <td>10</td>
 <td>10</td>
 <td>10</td>
@@ -1143,9 +1188,9 @@ Power: 0.9666666666666667</code></pre>
 <tr class="even">
 <th data-quarto-table-cell-role="th">3</th>
 <td>song_id Var</td>
-<td>15.434</td>
-<td>0.961</td>
-<td>4.341417e-02</td>
+<td>13.523</td>
+<td>0.898</td>
+<td>4.404120e-02</td>
 <td>10</td>
 <td>10</td>
 <td>10</td>
@@ -1154,9 +1199,9 @@ Power: 0.9666666666666667</code></pre>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">4</th>
 <td>subj_id Var</td>
-<td>41.762</td>
-<td>2.815</td>
-<td>6.219009e-02</td>
+<td>22.433</td>
+<td>1.753</td>
+<td>8.707555e-02</td>
 <td>10</td>
 <td>10</td>
 <td>10</td>
@@ -1176,8 +1221,8 @@ Power: 0.9666666666666667</code></pre>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">115</th>
 <td>Intercept</td>
-<td>59.624</td>
-<td>1.252</td>
+<td>60.553</td>
+<td>1.201</td>
 <td>0.000000e+00</td>
 <td>50</td>
 <td>40</td>
@@ -1187,9 +1232,9 @@ Power: 0.9666666666666667</code></pre>
 <tr class="even">
 <th data-quarto-table-cell-role="th">116</th>
 <td>genre_i</td>
-<td>6.086</td>
-<td>0.940</td>
-<td>9.576663e-11</td>
+<td>6.311</td>
+<td>0.950</td>
+<td>3.100428e-11</td>
 <td>50</td>
 <td>40</td>
 <td>40</td>
@@ -1198,9 +1243,9 @@ Power: 0.9666666666666667</code></pre>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">117</th>
 <td>genre_i Var</td>
-<td>11.475</td>
-<td>0.371</td>
-<td>1.193210e-04</td>
+<td>16.710</td>
+<td>0.507</td>
+<td>3.397149e-05</td>
 <td>50</td>
 <td>40</td>
 <td>40</td>
@@ -1209,9 +1254,9 @@ Power: 0.9666666666666667</code></pre>
 <tr class="even">
 <th data-quarto-table-cell-role="th">118</th>
 <td>song_id Var</td>
-<td>11.793</td>
-<td>0.263</td>
-<td>2.543401e-08</td>
+<td>10.110</td>
+<td>0.231</td>
+<td>3.954845e-08</td>
 <td>50</td>
 <td>40</td>
 <td>40</td>
@@ -1220,9 +1265,9 @@ Power: 0.9666666666666667</code></pre>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">119</th>
 <td>subj_id Var</td>
-<td>61.971</td>
-<td>1.603</td>
-<td>1.522113e-06</td>
+<td>57.943</td>
+<td>1.517</td>
+<td>1.598574e-06</td>
 <td>50</td>
 <td>40</td>
 <td>40</td>
@@ -1236,7 +1281,7 @@ Power: 0.9666666666666667</code></pre>
 </div>
 </div>
 <p>To run multiple replication of simulations for each combination of parameter values in pgrid, we can use the for statement to iterate over each row of parameter values in pgrid for the number of times specified by reps. Fair warning, this will take some time if you have set a high number of replications!</p>
-<div id="4046f81c" class="cell" data-execution_count="27">
+<div id="2abaab0b" class="cell" data-execution_count="27">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>sims_params <span class="op">=</span> []</span>
 <span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>pgrid <span class="op">=</span> pd.DataFrame(<span class="bu">list</span>(product(<span class="op">*</span>params.values())), columns<span class="op">=</span>params.keys())</span>
 <span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -1275,9 +1320,9 @@ Power: 0.9666666666666667</code></pre>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">0</th>
 <td>Intercept</td>
-<td>59.981</td>
-<td>3.376</td>
-<td>1.334792e-70</td>
+<td>61.955</td>
+<td>2.231</td>
+<td>9.278528e-170</td>
 <td>10</td>
 <td>10</td>
 <td>10</td>
@@ -1286,9 +1331,9 @@ Power: 0.9666666666666667</code></pre>
 <tr class="even">
 <th data-quarto-table-cell-role="th">1</th>
 <td>genre_i</td>
-<td>-1.414</td>
-<td>2.222</td>
-<td>5.245084e-01</td>
+<td>-1.829</td>
+<td>2.377</td>
+<td>4.415345e-01</td>
 <td>10</td>
 <td>10</td>
 <td>10</td>
@@ -1297,9 +1342,9 @@ Power: 0.9666666666666667</code></pre>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">2</th>
 <td>genre_i Var</td>
-<td>27.848</td>
-<td>2.716</td>
-<td>1.678563e-01</td>
+<td>27.735</td>
+<td>2.570</td>
+<td>1.789200e-01</td>
 <td>10</td>
 <td>10</td>
 <td>10</td>
@@ -1308,9 +1353,9 @@ Power: 0.9666666666666667</code></pre>
 <tr class="even">
 <th data-quarto-table-cell-role="th">3</th>
 <td>song_id Var</td>
-<td>5.229</td>
-<td>0.419</td>
-<td>9.348617e-02</td>
+<td>7.926</td>
+<td>0.670</td>
+<td>1.408153e-01</td>
 <td>10</td>
 <td>10</td>
 <td>10</td>
@@ -1319,9 +1364,9 @@ Power: 0.9666666666666667</code></pre>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">4</th>
 <td>subj_id Var</td>
-<td>103.249</td>
-<td>9.819</td>
-<td>1.572877e-01</td>
+<td>35.390</td>
+<td>2.409</td>
+<td>6.732228e-02</td>
 <td>10</td>
 <td>10</td>
 <td>10</td>
@@ -1341,8 +1386,8 @@ Power: 0.9666666666666667</code></pre>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">3595</th>
 <td>Intercept</td>
-<td>61.245</td>
-<td>1.182</td>
+<td>59.354</td>
+<td>0.990</td>
 <td>0.000000e+00</td>
 <td>50</td>
 <td>40</td>
@@ -1352,9 +1397,9 @@ Power: 0.9666666666666667</code></pre>
 <tr class="even">
 <th data-quarto-table-cell-role="th">3596</th>
 <td>genre_i</td>
-<td>6.079</td>
-<td>1.046</td>
-<td>6.178835e-09</td>
+<td>4.507</td>
+<td>1.045</td>
+<td>1.613200e-05</td>
 <td>50</td>
 <td>40</td>
 <td>40</td>
@@ -1363,9 +1408,9 @@ Power: 0.9666666666666667</code></pre>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">3597</th>
 <td>genre_i Var</td>
-<td>14.829</td>
-<td>0.458</td>
-<td>4.625940e-05</td>
+<td>21.666</td>
+<td>0.732</td>
+<td>2.015155e-04</td>
 <td>50</td>
 <td>40</td>
 <td>40</td>
@@ -1374,9 +1419,9 @@ Power: 0.9666666666666667</code></pre>
 <tr class="even">
 <th data-quarto-table-cell-role="th">3598</th>
 <td>song_id Var</td>
-<td>14.682</td>
-<td>1.239</td>
-<td>1.361811e-01</td>
+<td>11.908</td>
+<td>0.408</td>
+<td>2.525483e-04</td>
 <td>50</td>
 <td>40</td>
 <td>40</td>
@@ -1385,9 +1430,9 @@ Power: 0.9666666666666667</code></pre>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">3599</th>
 <td>subj_id Var</td>
-<td>49.943</td>
-<td>1.203</td>
-<td>1.775233e-07</td>
+<td>32.567</td>
+<td>0.745</td>
+<td>4.133455e-08</td>
 <td>50</td>
 <td>40</td>
 <td>40</td>
@@ -1401,7 +1446,7 @@ Power: 0.9666666666666667</code></pre>
 </div>
 </div>
 <p>Now, as before, we can calculate power. But this time we’ll group by all of the parameters we manipulated in pgrid, so that we can get power estimates for all combinations of parameter values.</p>
-<div id="4477adfb" class="cell" data-execution_count="28">
+<div id="3982882c" class="cell" data-execution_count="28">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>sims_table <span class="op">=</span> sims_params_df.query(<span class="st">"term == 'genre_i'"</span>).groupby([<span class="st">'term'</span>, <span class="st">'n_subj'</span>, <span class="st">'n_pop'</span>, <span class="st">'n_rock'</span>, <span class="st">'beta_1'</span>]).agg(</span>
 <span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    mean_estimate<span class="op">=</span>pd.NamedAgg(column<span class="op">=</span><span class="st">'Coef.'</span>, aggfunc<span class="op">=</span><span class="kw">lambda</span> x: x.astype(<span class="bu">float</span>).mean()),</span>
 <span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    mean_se<span class="op">=</span>pd.NamedAgg(column<span class="op">=</span><span class="st">'Std.Err.'</span>, aggfunc<span class="op">=</span><span class="kw">lambda</span> x: x.astype(<span class="bu">float</span>).mean()),</span>
@@ -1409,7 +1454,7 @@ Power: 0.9666666666666667</code></pre>
 <span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>).reset_index()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Here’s a formatted table that summarizes the output from the power simulation.</p>
-<div id="4efa8d0f" class="cell" data-execution_count="29">
+<div id="1e5ab1ed" class="cell" data-execution_count="29">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>sims_table</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-display" data-execution_count="29">
 <div>
@@ -1437,9 +1482,9 @@ Power: 0.9666666666666667</code></pre>
 <td>10</td>
 <td>10</td>
 <td>1</td>
-<td>1.020200</td>
-<td>2.275800</td>
-<td>0.066667</td>
+<td>0.196433</td>
+<td>2.235533</td>
+<td>0.133333</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">1</th>
@@ -1448,9 +1493,9 @@ Power: 0.9666666666666667</code></pre>
 <td>10</td>
 <td>10</td>
 <td>3</td>
-<td>2.599300</td>
-<td>2.528300</td>
-<td>0.100000</td>
+<td>3.173000</td>
+<td>2.340300</td>
+<td>0.300000</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">2</th>
@@ -1459,9 +1504,9 @@ Power: 0.9666666666666667</code></pre>
 <td>10</td>
 <td>10</td>
 <td>5</td>
-<td>5.574367</td>
-<td>2.393533</td>
-<td>0.700000</td>
+<td>5.274133</td>
+<td>2.262600</td>
+<td>0.600000</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">3</th>
@@ -1470,9 +1515,9 @@ Power: 0.9666666666666667</code></pre>
 <td>10</td>
 <td>40</td>
 <td>1</td>
-<td>1.592067</td>
-<td>2.075833</td>
-<td>0.133333</td>
+<td>0.950933</td>
+<td>2.160667</td>
+<td>0.033333</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">4</th>
@@ -1481,9 +1526,9 @@ Power: 0.9666666666666667</code></pre>
 <td>10</td>
 <td>40</td>
 <td>3</td>
-<td>3.229267</td>
-<td>2.006967</td>
-<td>0.400000</td>
+<td>3.558267</td>
+<td>2.185367</td>
+<td>0.300000</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">5</th>
@@ -1492,9 +1537,9 @@ Power: 0.9666666666666667</code></pre>
 <td>10</td>
 <td>40</td>
 <td>5</td>
-<td>5.235167</td>
-<td>2.262100</td>
-<td>0.633333</td>
+<td>4.903767</td>
+<td>2.343833</td>
+<td>0.566667</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">6</th>
@@ -1503,8 +1548,8 @@ Power: 0.9666666666666667</code></pre>
 <td>40</td>
 <td>10</td>
 <td>1</td>
-<td>1.122167</td>
-<td>2.355967</td>
+<td>0.804400</td>
+<td>2.221900</td>
 <td>0.033333</td>
 </tr>
 <tr class="even">
@@ -1514,9 +1559,9 @@ Power: 0.9666666666666667</code></pre>
 <td>40</td>
 <td>10</td>
 <td>3</td>
-<td>3.024267</td>
-<td>2.213267</td>
-<td>0.200000</td>
+<td>3.536200</td>
+<td>2.215000</td>
+<td>0.266667</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">8</th>
@@ -1525,9 +1570,9 @@ Power: 0.9666666666666667</code></pre>
 <td>40</td>
 <td>10</td>
 <td>5</td>
-<td>4.296767</td>
-<td>2.325933</td>
-<td>0.533333</td>
+<td>4.719833</td>
+<td>2.294400</td>
+<td>0.666667</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">9</th>
@@ -1536,9 +1581,9 @@ Power: 0.9666666666666667</code></pre>
 <td>40</td>
 <td>40</td>
 <td>1</td>
-<td>0.310400</td>
-<td>2.077567</td>
-<td>0.033333</td>
+<td>1.253167</td>
+<td>2.145833</td>
+<td>0.066667</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">10</th>
@@ -1547,9 +1592,9 @@ Power: 0.9666666666666667</code></pre>
 <td>40</td>
 <td>40</td>
 <td>3</td>
-<td>2.796367</td>
-<td>2.039733</td>
-<td>0.333333</td>
+<td>2.672500</td>
+<td>2.034267</td>
+<td>0.266667</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">11</th>
@@ -1558,9 +1603,9 @@ Power: 0.9666666666666667</code></pre>
 <td>40</td>
 <td>40</td>
 <td>5</td>
-<td>5.341500</td>
-<td>1.903600</td>
-<td>0.866667</td>
+<td>4.770933</td>
+<td>1.989533</td>
+<td>0.633333</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">12</th>
@@ -1569,9 +1614,9 @@ Power: 0.9666666666666667</code></pre>
 <td>10</td>
 <td>10</td>
 <td>1</td>
-<td>0.886000</td>
-<td>1.483667</td>
-<td>0.166667</td>
+<td>1.121433</td>
+<td>1.495333</td>
+<td>0.133333</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">13</th>
@@ -1580,9 +1625,9 @@ Power: 0.9666666666666667</code></pre>
 <td>10</td>
 <td>10</td>
 <td>3</td>
-<td>3.372300</td>
-<td>1.521767</td>
-<td>0.600000</td>
+<td>2.775600</td>
+<td>1.546867</td>
+<td>0.466667</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">14</th>
@@ -1591,9 +1636,9 @@ Power: 0.9666666666666667</code></pre>
 <td>10</td>
 <td>10</td>
 <td>5</td>
-<td>4.418867</td>
-<td>1.612867</td>
-<td>0.733333</td>
+<td>4.323867</td>
+<td>1.582933</td>
+<td>0.833333</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">15</th>
@@ -1602,9 +1647,9 @@ Power: 0.9666666666666667</code></pre>
 <td>10</td>
 <td>40</td>
 <td>1</td>
-<td>1.138733</td>
-<td>1.495533</td>
-<td>0.133333</td>
+<td>1.194733</td>
+<td>1.374433</td>
+<td>0.166667</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">16</th>
@@ -1613,9 +1658,9 @@ Power: 0.9666666666666667</code></pre>
 <td>10</td>
 <td>40</td>
 <td>3</td>
-<td>2.711567</td>
-<td>1.337100</td>
-<td>0.600000</td>
+<td>3.140633</td>
+<td>1.372100</td>
+<td>0.700000</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">17</th>
@@ -1624,9 +1669,9 @@ Power: 0.9666666666666667</code></pre>
 <td>10</td>
 <td>40</td>
 <td>5</td>
-<td>4.929733</td>
-<td>1.384700</td>
-<td>0.900000</td>
+<td>5.465067</td>
+<td>1.364567</td>
+<td>0.933333</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">18</th>
@@ -1635,9 +1680,9 @@ Power: 0.9666666666666667</code></pre>
 <td>40</td>
 <td>10</td>
 <td>1</td>
-<td>1.098867</td>
-<td>1.386200</td>
-<td>0.100000</td>
+<td>1.181533</td>
+<td>1.297033</td>
+<td>0.133333</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">19</th>
@@ -1646,9 +1691,9 @@ Power: 0.9666666666666667</code></pre>
 <td>40</td>
 <td>10</td>
 <td>3</td>
-<td>2.797167</td>
-<td>1.323933</td>
-<td>0.500000</td>
+<td>3.339400</td>
+<td>1.373900</td>
+<td>0.733333</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">20</th>
@@ -1657,9 +1702,9 @@ Power: 0.9666666666666667</code></pre>
 <td>40</td>
 <td>10</td>
 <td>5</td>
-<td>4.669300</td>
-<td>1.362433</td>
-<td>0.866667</td>
+<td>5.131700</td>
+<td>1.378167</td>
+<td>0.933333</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">21</th>
@@ -1668,9 +1713,9 @@ Power: 0.9666666666666667</code></pre>
 <td>40</td>
 <td>40</td>
 <td>1</td>
-<td>0.869800</td>
-<td>0.961900</td>
-<td>0.166667</td>
+<td>0.939800</td>
+<td>0.963933</td>
+<td>0.200000</td>
 </tr>
 <tr class="odd">
 <th data-quarto-table-cell-role="th">22</th>
@@ -1679,9 +1724,9 @@ Power: 0.9666666666666667</code></pre>
 <td>40</td>
 <td>40</td>
 <td>3</td>
-<td>2.808300</td>
-<td>0.983800</td>
-<td>0.800000</td>
+<td>2.979333</td>
+<td>0.978900</td>
+<td>0.833333</td>
 </tr>
 <tr class="even">
 <th data-quarto-table-cell-role="th">23</th>
@@ -1690,8 +1735,8 @@ Power: 0.9666666666666667</code></pre>
 <td>40</td>
 <td>40</td>
 <td>5</td>
-<td>5.113767</td>
-<td>0.997133</td>
+<td>4.947500</td>
+<td>0.976167</td>
 <td>1.000000</td>
 </tr>
 </tbody>
@@ -1701,7 +1746,7 @@ Power: 0.9666666666666667</code></pre>
 </div>
 </div>
 <p>Here’s a graph that visualizes the output of the power simulation.</p>
-<div id="8725b91c" class="cell" data-execution_count="30">
+<div id="9d4846db" class="cell" data-execution_count="30">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># transform data type and create labels</span></span>
 <span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>sims_table[<span class="st">'n_subj'</span>] <span class="op">=</span> sims_table[<span class="st">'n_subj'</span>].astype(<span class="bu">str</span>)</span>
 <span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>sims_table[<span class="st">'n_pop'</span>] <span class="op">=</span> <span class="st">'n_pop: '</span> <span class="op">+</span> sims_table[<span class="st">'n_pop'</span>].astype(<span class="bu">str</span>)</span>

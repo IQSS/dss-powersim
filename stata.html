@@ -543,8 +543,27 @@ window.Quarto = {
 </section>
 <section id="establish-the-data-generating-parameters" class="level3">
 <h3 class="anchored" data-anchor-id="establish-the-data-generating-parameters">Establish the data-generating parameters</h3>
-<p>The first thing to do is to set up the parameters that govern the process we assume gave rise to the data - the <em>data-generating process</em>, or DGP. We previously decided upon the the data-generating parameters (see <a href="./power-of-what.html">Power of What?</a>), so we just need to code them here.</p>
-<p>Note: There is a difference between Stata and R and the Python: We decrease the data-generating parameters to simplify our model, and we delete some paramaters: by-song random intercept <code>omega_0</code>, by-subject random slope sd <code>tau_1</code>, and the correlation between intercept and slope <code>rho</code>.</p>
+<p>The first thing to do is to set up the parameters that govern the process we assume gave rise to the data - the <em>data-generating process</em>, or DGP. We previously decided upon the data-generating parameters (see <a href="./power-of-what.html">Power of What?</a>), so we just need to code them here.</p>
+<div class="callout callout-style-simple callout-important callout-titled" title="This chapter fits a simpler model than the R and Python chapters">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>This chapter fits a simpler model than the R and Python chapters
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The R and Python chapters fit the full crossed design: a by-song random intercept, a by-subject random intercept, a by-subject random slope, and the correlation between the two subject effects. <strong>This chapter drops three of those parameters</strong> — <code>omega_0</code>, <code>tau_1</code> and <code>rho</code> — and fits a random-intercept model, <code>mixed liking_ij genre_i || subj_id:</code>.</p>
+<p>The reason is runtime, not principle. Stata <em>can</em> express the crossed design, as <code>mixed liking_ij genre_i || _all: R.song_id || subj_id: genre_i, cov(un)</code>, but fitting it thousands of times over a grid of parameter values takes days rather than minutes, which makes a power simulation of the kind this tutorial teaches impractical in Stata.</p>
+<p>Two consequences worth being explicit about:</p>
+<ul>
+<li><strong>The power estimates here are optimistic.</strong> Ignoring by-song variance and the random slope shrinks the standard error of <code>beta_1</code>, so power comes out higher than for the design the study actually has.</li>
+<li><strong>They are not comparable with the R and Python chapters</strong>, which answer a different (and harder) question.</li>
+</ul>
+<p>Read this chapter for the Stata mechanics — programs, <code>return</code>, matrices, looping a simulation — and take the R or Python chapter as the reference for the design itself.</p>
+</div>
+</div>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">// set all data-generating parameters</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">global</span> beta_0 = 60   <span class="co">// intercept; i.e., the grand mean</span></span>
@@ -614,7 +633,6 @@ variable category was str3 now str4
      +------------------------------+
 
 
-(file songs.dta not found)
 file songs.dta saved</code></pre>
 </div>
 </div>
@@ -658,7 +676,6 @@ file songs.dta saved</code></pre>
      +---------------------+
 
 
-(file subjects.dta not found)
 file subjects.dta saved</code></pre>
 </div>
 </div>
@@ -677,7 +694,7 @@ file subjects.dta saved</code></pre>
 </section>
 <section id="simulate-trials" class="level4">
 <h4 class="anchored" data-anchor-id="simulate-trials">Simulate trials</h4>
-<p>Since all subjects rate all songs (i.e., the design is fully crossed) we can set up a table of trials by including every possible combination of the rows in the <code>subjects</code> and <code>songs</code> tables. Each trial has random error associated with it, reflecting fluctuations in trial-by-trial ratings due to unkown factors. We simulate this by sampling values from a univariate normal distribution with a mean of 0 and a standard deviation of <code>sigma</code>.</p>
+<p>Since all subjects rate all songs (i.e., the design is fully crossed) we can set up a table of trials by including every possible combination of the rows in the <code>subjects</code> and <code>songs</code> tables. Each trial has random error associated with it, reflecting fluctuations in trial-by-trial ratings due to unknown factors. We simulate this by sampling values from a univariate normal distribution with a mean of 0 and a standard deviation of <code>sigma</code>.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">// cross subject and song IDs; add an error term</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">use</span> subjects, <span class="kw">clear</span></span>
@@ -731,7 +748,6 @@ file subjects.dta saved</code></pre>
  10. |       1        10        pop         0   76.21601 |
      +---------------------------------------------------+
 
-(file data_sim.dta not found)
 file data_sim.dta saved</code></pre>
 </div>
 </div>
@@ -818,7 +834,7 @@ y1   6.0726376   59.726807    2.002387   2.0872774</code></pre>
 </section>
 <section id="data-simulation-automated" class="level2">
 <h2 class="anchored" data-anchor-id="data-simulation-automated">Data simulation automated</h2>
-<p>Now that we’ve tested the data generating code, we can put it into a function so that it’s easy to run it repeatedly.</p>
+<p>Now that we’ve tested the data generating code, we can put it into a <em>program</em> — Stata’s equivalent of a function — so that it’s easy to run it repeatedly.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">capture</span> <span class="kw">program</span> <span class="kw">define</span> sim_data</span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">args</span> n_subj n_pop n_rock beta_0 beta_1 tau_0 sigma</span>
@@ -858,7 +874,7 @@ y1   6.0726376   59.726807    2.002387   2.0872774</code></pre>
 </section>
 <section id="power-calculation-single-run" class="level2">
 <h2 class="anchored" data-anchor-id="power-calculation-single-run">Power calculation single run</h2>
-<p>We can wrap the data generating function and modeling code in a new function <code>single_run()</code> that returns the analysis results for a single simulation run. We’ll suppress warnings and messages from the modeling fitting process, as these sometimes occur with simulation runs that generate extreme realized values for parameters.</p>
+<p>We can wrap the data generating function and modeling code in a new function <code>single_run()</code> that returns the analysis results for a single simulation run. The <code>noretable nofetable noheader nogroup</code> options keep <code>mixed</code> from printing a full table for every one of the thousands of fits.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">capture</span> <span class="kw">program</span> <span class="kw">define</span> single_run, rclass</span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">args</span> n_subj n_pop n_rock beta_0 beta_1 tau_0 sigma</span>
@@ -1447,7 +1463,7 @@ Power Mean: 1</code></pre>
 </div>
 <section id="check-false-positive-rate" class="level3">
 <h3 class="anchored" data-anchor-id="check-false-positive-rate">Check false positive rate</h3>
-<p>We can do a sanity check to see if our simulation is performing as expected by checking the false positive rate (Type I error rate). We set the effect of <code>genre_ij</code> (<code>beta_1</code>) to 0 to calculate the false positive rate, which is the probability of concluding there is an effect when there is no actual effect in the population.</p>
+<p>We can do a sanity check to see if our simulation is performing as expected by checking the false positive rate (Type I error rate). We set the effect of <code>genre_i</code> (<code>beta_1</code>) to 0 to calculate the false positive rate, which is the probability of concluding there is an effect when there is no actual effect in the population.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co">// run simulations and calculate the false positive rate</span></span>
 <span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="kw">clear</span></span>
@@ -1940,7 +1956,7 @@ Power Mean: 0</code></pre>
 <h2 class="anchored" data-anchor-id="power-for-different-effect-sizes">Power for different effect sizes</h2>
 <p>In real life, we will not know the effect size of our quantity of interest and so we will need to repeatedly perform the power analysis over a range of different plausible effect sizes. Perhaps we might also want to calculate power as we vary other data-generating parameters, such as the number of pop and rock songs sampled and the number of subjects sampled. We can create a table that combines all combinations of the parameters we want to vary in a grid.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co">// grid of paramater values of interest</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co">// grid of parameter values of interest</span></span>
 <span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="fu">matrix</span> <span class="kw">define</span> params = (10, 10, 10, 1 \ 10, 10, 10, 2 \ 10, 10, 10, 3 \ 10, 10, 10, 4 \ 10, 10, 10, 5 <span class="co">///</span></span>
 <span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>\ 10, 10, 40, 1 \ 10, 10, 40, 2 \ 10, 10, 40, 3 \ 10, 10, 40, 4 \ 10, 10, 40, 5 <span class="co">///</span></span>
 <span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>\ 10, 40, 10, 1 \ 10, 40, 10, 2 \ 10, 40, 10, 3 \ 10, 40, 10, 4 \ 10, 40, 10, 5 <span class="co">///</span></span>
@@ -1980,12 +1996,18 @@ Power Mean: 0</code></pre>
 <span id="cb33-22"><a href="#cb33-22" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb33-23"><a href="#cb33-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> <span class="fu">matrix</span> RE results</span>
 <span id="cb33-24"><a href="#cb33-24" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>connection timed out
+could not copy http://fmwww.bc.edu/repec/bocode/m/mf_mm_cond.hlp
+(no action taken)
+r(2);</code></pre>
+</div>
 </div>
 <p>If we call <code>parameter_search()</code> it will return a single replication of simulations for each combination of parameter values in <code>params</code>.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>parameter_search params</span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="fu">return</span> <span class="ot">list</span></span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="fu">matrix</span> <span class="ot">list</span> <span class="fu">r</span>(RE)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>parameter_search params</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="fu">return</span> <span class="ot">list</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="fu">matrix</span> <span class="ot">list</span> <span class="fu">r</span>(RE)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Number of observations (_N) was 0, now 20.
 variable category was str3 now str4
@@ -2959,26 +2981,26 @@ r60          50          40          40           5   4.7752599   .25301401   1.
 </div>
 <p>Then we just repeatedly call <code>parameter_search()</code> for the number of times specified by <code>reps</code> and store the result in a matrix <code>final_results</code>. Fair warning, this will take some time if you have set a high number of replications!</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co">// replicate the parameter search many times</span></span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="kw">clear</span></span>
-<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="fu">matrix</span> final_results = <span class="fu">J</span>(1, 7, .)</span>
-<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>forval i = 1/<span class="ot">$reps</span> {</span>
-<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>  parameter_search params</span>
-<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">matrix</span> final_results = final_results \ <span class="fu">r</span>(RE)</span>
-<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a><span class="co">// rename the columns</span></span>
-<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a><span class="kw">clear</span></span>
-<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a><span class="kw">svmat</span> final_results, names(final_results)</span>
-<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a><span class="kw">rename</span> final_results1 n_subj</span>
-<span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a><span class="kw">rename</span> final_results2 n_pop</span>
-<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a><span class="kw">rename</span> final_results3 n_rock</span>
-<span id="cb36-16"><a href="#cb36-16" aria-hidden="true" tabindex="-1"></a><span class="kw">rename</span> final_results4 beta_1</span>
-<span id="cb36-17"><a href="#cb36-17" aria-hidden="true" tabindex="-1"></a><span class="kw">rename</span> final_results5 mean_estimate</span>
-<span id="cb36-18"><a href="#cb36-18" aria-hidden="true" tabindex="-1"></a><span class="kw">rename</span> final_results6 mean_se</span>
-<span id="cb36-19"><a href="#cb36-19" aria-hidden="true" tabindex="-1"></a><span class="kw">rename</span> final_results7 p_value</span>
-<span id="cb36-20"><a href="#cb36-20" aria-hidden="true" tabindex="-1"></a><span class="kw">drop</span> <span class="kw">in</span> 1</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co">// replicate the parameter search many times</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="kw">clear</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="fu">matrix</span> final_results = <span class="fu">J</span>(1, 7, .)</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>forval i = 1/<span class="ot">$reps</span> {</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>  parameter_search params</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">matrix</span> final_results = final_results \ <span class="fu">r</span>(RE)</span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a><span class="co">// rename the columns</span></span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a><span class="kw">clear</span></span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a><span class="kw">svmat</span> final_results, names(final_results)</span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a><span class="kw">rename</span> final_results1 n_subj</span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a><span class="kw">rename</span> final_results2 n_pop</span>
+<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a><span class="kw">rename</span> final_results3 n_rock</span>
+<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a><span class="kw">rename</span> final_results4 beta_1</span>
+<span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a><span class="kw">rename</span> final_results5 mean_estimate</span>
+<span id="cb37-18"><a href="#cb37-18" aria-hidden="true" tabindex="-1"></a><span class="kw">rename</span> final_results6 mean_se</span>
+<span id="cb37-19"><a href="#cb37-19" aria-hidden="true" tabindex="-1"></a><span class="kw">rename</span> final_results7 p_value</span>
+<span id="cb37-20"><a href="#cb37-20" aria-hidden="true" tabindex="-1"></a><span class="kw">drop</span> <span class="kw">in</span> 1</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Number of observations (_N) was 0, now 20.
 variable category was str3 now str4
@@ -29996,17 +30018,17 @@ Number of observations (_N) was 0, now 1,801.
 (1 observation deleted)</code></pre>
 </div>
 </div>
-<p>Now, as before, we can calculate power. But this time we’ll group by all of the parameters we manipulated in <code>pgrid</code>, so that we can get power estimates for all combinations of parameter values.</p>
+<p>Now, as before, we can calculate power. But this time we’ll group by all of the parameters we manipulated in <code>params</code>, so that we can get power estimates for all combinations of parameter values.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">gen</span> power = 0</span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="kw">replace</span> power = 1 <span class="kw">if</span> p_value &lt; <span class="ot">$alpha</span></span>
-<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="kw">drop</span> p_value</span>
-<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a><span class="kw">collapse</span> (<span class="kw">mean</span>) mean_estimate mean_se power, <span class="kw">by</span>(n_subj n_pop n_rock beta_1)</span>
-<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a><span class="ot">list</span></span>
-<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a><span class="kw">save</span> sims_table, <span class="kw">replace</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">gen</span> power = 0</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="kw">replace</span> power = 1 <span class="kw">if</span> p_value &lt; <span class="ot">$alpha</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="kw">drop</span> p_value</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a><span class="kw">collapse</span> (<span class="kw">mean</span>) mean_estimate mean_se power, <span class="kw">by</span>(n_subj n_pop n_rock beta_1)</span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a><span class="ot">list</span></span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a><span class="kw">save</span> sims_table, <span class="kw">replace</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>(1,553 real changes made)
 
@@ -30086,14 +30108,13 @@ Number of observations (_N) was 0, now 1,801.
  60. |     50      40       40        5    4.98772   .2537428          1 |
      +-------------------------------------------------------------------+
 
-(file sims_table.dta not found)
 file sims_table.dta saved</code></pre>
 </div>
 </div>
 <p>Here’s a graph that visualizes the output of the power simulation.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="kw">twoway</span> (connected power beta_1 <span class="kw">if</span> n_subj == 10, <span class="kw">sort</span>) (connected power beta_1 <span class="kw">if</span> n_subj == 25, <span class="kw">sort</span>) (connected power beta_1 <span class="kw">if</span> n_subj == 50, <span class="kw">sort</span>), <span class="dv">scheme</span>(s2color) <span class="kw">by</span>(n_pop n_rock) <span class="bn">legend</span>(lab(1 <span class="st">"sample_size = 10"</span>) lab(2 <span class="st">"sample_size = 25"</span>) lab(3 <span class="st">"sample_size = 50"</span>))</span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="kw">graph</span> <span class="kw">export</span> <span class="st">"images/stata_final.png"</span>, <span class="kw">width</span>(1600) <span class="kw">replace</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="kw">twoway</span> (connected power beta_1 <span class="kw">if</span> n_subj == 10, <span class="kw">sort</span>) (connected power beta_1 <span class="kw">if</span> n_subj == 25, <span class="kw">sort</span>) (connected power beta_1 <span class="kw">if</span> n_subj == 50, <span class="kw">sort</span>), <span class="dv">scheme</span>(s2color) <span class="kw">by</span>(n_pop n_rock) <span class="bn">legend</span>(lab(1 <span class="st">"sample_size = 10"</span>) lab(2 <span class="st">"sample_size = 25"</span>) lab(3 <span class="st">"sample_size = 50"</span>))</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="kw">graph</span> <span class="kw">export</span> <span class="st">"images/stata_final.png"</span>, <span class="kw">width</span>(1600) <span class="kw">replace</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>file /Users/sworthin/Library/CloudStorage/Dropbox/workspace/training/dss-powersim/images/stata_final.png saved as PNG
     format</code></pre>
