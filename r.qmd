@@ -52,7 +52,7 @@ plan(multisession)
 
 ## Data simulation step by step
 
-To give an overview of the power simulation task, we will simulate data from a design with crossed random factors of subjects and songs (see [Power of What?](power-of-what.qmd) for design details), fit a model to the simulated data, recover from the model output the parameter values we put in, calculate power, and finally automate the whole process so that we can calculate power for different effect sizes. Much of the general workflow here is borrowed from [DeBruine & Dale (2021) Understanding Mixed-Effects Models through Simulation](https://journals.sagepub.com/doi/full/10.1177/2515245920965119). We'll start by writing code that simulates datasets under the alternative hypothesis.
+To give an overview of the power simulation task, we will simulate data from a design with crossed random factors of subjects and songs (see [Power of What?](power-of-what.qmd) for design details), fit a model to the simulated data, recover from the model output the parameter values we put in, calculate power, and finally automate the whole process so that we can calculate power for different effect sizes. Much of the general workflow here is borrowed from [DeBruine & Barr (2021) Understanding Mixed-Effects Models through Simulation](https://journals.sagepub.com/doi/full/10.1177/2515245920965119). We'll start by writing code that simulates datasets under the alternative hypothesis.
 
 ### Establish the simulation parameters
 
