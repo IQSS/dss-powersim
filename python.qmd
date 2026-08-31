@@ -15,13 +15,16 @@ mpl.rcParams.update({"figure.facecolor": "none", "savefig.facecolor": "none", "l
                      "xtick.color": "#7b8698", "ytick.color": "#7b8698"})
 ```
 
-To begin with, the simulation based power analysis in Python just follows the structure in the last section in R, and there are repetitions in the texts to describe the method. However, there are differences between the two languages and we will specify those discrepancy in the following "note" parts.
+This chapter follows the same structure as the R chapter, and much of the prose is deliberately repeated so that it can be read on its own. Where the two languages differ, a note says so.
 
 ## Setup
 
-Note: There are two differences between Python and the R language:
-1. R uses the p_load function to automatically install missing libraries and import libraries. Python needs to manually configure the environment. If the library is missing, you can use “! pip install [package_name]” to install;
-2. The R has set parallelism in the setup part, but Python uses the dask package to perform parallel computing in the simulation part.
+::: {.callout-note title="Two differences from the R chapter"}
+
+1. R uses `p_load()` to install any missing libraries and load them in one step. In Python the environment is configured separately --- here by `uv sync` from the materials folder --- so the imports below assume the packages are already installed.
+2. The R chapter sets up parallelism once in its setup section; this chapter uses `dask` at the point where the simulations are run.
+
+:::
 
 We will need to use several Python packages to optimize our workflow and fit mixed effects models.
 
@@ -47,9 +50,12 @@ np.random.seed(2138)
 
 To give an overview of the power simulation task, we will simulate data from a design with crossed random factors of subjects and songs (see Power of What? for design details), fit a model to the simulated data, recover from the model output the parameter values we put in, calculate power, and finally automate the whole process so that we can calculate power for different effect sizes. Much of the general workflow here is borrowed from DeBruine & Barr (2021) Understanding Mixed-Effects Models through Simulation. We’ll start by writing code that simulates datasets under the alternative hypothesis.
 
-Note: There are two differences between Python and the R:
-1. We use the package of "statsmodels" to set up the mixd effect model in Python. However, this package doesn't have extension to show the correlation between the random intercept and the random slope of the subject like that in R;
-2. There's no "broom.mixed::tidy()" function in Python and that's why the output is incomplete.
+::: {.callout-note title="Two differences from the R chapter"}
+
+1. The mixed model is fitted with `statsmodels`, which does not report the correlation between a subject's random intercept and random slope, so `rho` cannot be recovered from the fit as it can in R.
+2. There is no equivalent of `broom.mixed::tidy()`, so the results are pulled out of the summary table by hand rather than arriving as a tidy data frame.
+
+:::
 
 ### Establish the simulation parameters
 
@@ -65,7 +71,7 @@ alpha = 0.05
 
 ### Establish the data-generating parameters
 
-The first thing to do is to set up the parameters that govern the process we assume gave rise to the data - the data-generating process, or DGP. We previously decided upon the the data-generating parameters (see Power of What?), so we just need to code them here.
+The first thing to do is to set up the parameters that govern the process we assume gave rise to the data - the data-generating process, or DGP. We previously decided upon the data-generating parameters (see Power of What?), so we just need to code them here.
 
 ```{python}
 # set all data-generating parameters
@@ -90,7 +96,7 @@ n_rock = 15  # number of songs in rock category
 
 #### Simulate the sampling of songs
 
-We need to create a table listing each song \(i\), which category it is in (rock or pop), and its random effect $O_{0i}$. The latter is sampled from a univariate normal distribution using the function np.random.normal().
+We need to create a table listing each song $i$, which category it is in (rock or pop), and its random effect $O_{0i}$. The latter is sampled from a univariate normal distribution using the function np.random.normal().
 
 ```{python}
 # simulate a sample of songs
@@ -140,7 +146,7 @@ print(check_values)
 
 #### Simulate trials
 
-Since all subjects rate all songs (i.e., the design is fully crossed) we can set up a table of trials by including every possible combination of the rows in the subjects and songs tables. Each trial has random error associated with it, reflecting fluctuations in trial-by-trial ratings due to unkown factors. We simulate this by sampling values from a univariate normal distribution with a mean of 0 and a standard deviation of sigma.
+Since all subjects rate all songs (i.e., the design is fully crossed) we can set up a table of trials by including every possible combination of the rows in the subjects and songs tables. Each trial has random error associated with it, reflecting fluctuations in trial-by-trial ratings due to unknown factors. We simulate this by sampling values from a univariate normal distribution with a mean of 0 and a standard deviation of sigma.
 
 ```{python}
 # cross subject and song IDs; add an error term
@@ -289,9 +295,12 @@ To get an accurate estimation of power, we need to run the simulation many times
 
 We use dask.delayed function to decorate single_run() so that it operates lazily, then call the delayed version repeatedly using for statement, and finally call dask.compute function to get the result of simulations.
 
-Note: There are two differences between Python and the R:
-1. The R  uses the “future_map_dfr() function” to use the single_run() function in a loop, and Python directly uses “for” structure to do loop;
-2. The R sets parallel computing in the setup part, while the Python uses the “dask” library for parallel computing.
+::: {.callout-note title="Two differences from the R chapter"}
+
+1. R loops with `future_map_dfr()`; here a plain `for` loop builds a list of delayed calls.
+2. R configures parallelism once at the top; here `dask` does it at the point of use.
+
+:::
 
 ```{python}
 client = Client()
@@ -307,7 +316,7 @@ sims_result = dask.compute(*sims)
 
 sims_df = pd.concat(sims_result).reset_index().rename(columns={'index':'term'})
 ```
-We can finally calculate power for our parameter of interest $\beta_1$ denoted in the model output table as the term $genre_{i}$ by filtering to keep only that term and the calculating the proportion of times the \(p\)-value is below the alpha (0.05) threshold.
+We can finally calculate power for our parameter of interest $\beta_1$ denoted in the model output table as the term $genre_{i}$ by filtering to keep only that term and then calculating the proportion of times the $p$-value is below the alpha (0.05) threshold.
 
 ```{python}
 genre_i_sims = sims_df[sims_df['term'] == 'genre_i']
@@ -322,7 +331,7 @@ print(f"Power: {power}")
 
 ### Check false positive rate
 
-We can do a sanity check to see if our simulation is performing as expected by checking the false positive rate (Type I error rate). We set the effect of genre_ij (beta_1) to 0 to calculate the false positive rate, which is the probability of concluding there is an effect when there is no actual effect in the population.
+We can do a sanity check to see if our simulation is performing as expected by checking the false positive rate (Type I error rate). We set the effect of genre_i (beta_1) to 0 to calculate the false positive rate, which is the probability of concluding there is an effect when there is no actual effect in the population.
 
 ```{python}
 sims_fp = [delayed_single_run(beta_1=0) for _ in range(reps)]
@@ -348,7 +357,7 @@ Note: There are two differences between Python and the R:
 2. Python couldn’t repeatedly use parameter_search() and instead uses two layers of loop to realize multiple simulations of each permutation and combination of parameters.
 
 ```{python}
- # grid of paramater values of interest
+ # grid of parameter values of interest
 params = {
     'n_subj': [10, 50],
     'n_pop': [10, 40],

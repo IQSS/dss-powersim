@@ -68,7 +68,7 @@ alpha <- 0.05
 
 ### Establish the data-generating parameters
 
-The first thing to do is to set up the parameters that govern the process we assume gave rise to the data - the *data-generating process*, or DGP. We previously decided upon the the data-generating parameters (see [Power of What?](power-of-what.qmd)), so we just need to code them here.
+The first thing to do is to set up the parameters that govern the process we assume gave rise to the data - the *data-generating process*, or DGP. We previously decided upon the data-generating parameters (see [Power of What?](power-of-what.qmd)), so we just need to code them here.
 
 ```{r}
 #| label: params-all
@@ -152,7 +152,7 @@ tibble(
 
 #### Simulate trials
 
-Since all subjects rate all songs (i.e., the design is fully crossed) we can set up a table of trials by including every possible combination of the rows in the `subjects` and `songs` tables. Each trial has random error associated with it, reflecting fluctuations in trial-by-trial ratings due to unkown factors. We simulate this by sampling values from a univariate normal distribution with a mean of 0 and a standard deviation of `sigma`.
+Since all subjects rate all songs (i.e., the design is fully crossed) we can set up a table of trials by including every possible combination of the rows in the `subjects` and `songs` tables. Each trial has random error associated with it, reflecting fluctuations in trial-by-trial ratings due to unknown factors. We simulate this by sampling values from a univariate normal distribution with a mean of 0 and a standard deviation of `sigma`.
 
 ```{r}
 # cross subject and song IDs; add an error term
@@ -168,7 +168,7 @@ With this resulting `trials` table, in combination with the constants `beta_0` a
 
 ```{r}
 dat_sim <- trials |>
-  mutate(liking_ij = beta_0 + T_0j + O_0i + (beta_1 + T_1j) * genre_i + e_ij) %>%
+  mutate(liking_ij = beta_0 + T_0j + O_0i + (beta_1 + T_1j) * genre_i + e_ij) |>
   select(subj_id, song_id, category, genre_i, liking_ij)
 
 print(dat_sim, n=10)
@@ -219,12 +219,12 @@ mod_sim <- lmer(form, data = dat_sim)
 summary(mod_sim, corr = FALSE)
 ```
 
-We can use the `broom.mixed::tidy()` function to get a tidy table of the results. This will prove to be super useful later when we need to combine the output from hundreds of simulations to calculate power. We will added columns for `parameter` and `value`, so we can compare the estimate from the model to the parameters we used to simulate the data. 
+We can use the `broom.mixed::tidy()` function to get a tidy table of the results. This will prove to be super useful later when we need to combine the output from hundreds of simulations to calculate power. We will add columns for `parameter` and `value`, so we can compare the estimate from the model to the parameters we used to simulate the data. 
 
 ```{r}
 # get a tidy table of results
 broom.mixed::tidy(mod_sim) |>
-  mutate(across(is.numeric, round, 3)) |>
+  mutate(across(where(is.numeric), \(x) round(x, 3))) |>
   mutate(
     parameter = c("beta_0", "beta_1", "omega_0", "tau_0", "rho", "tau_1", "sigma"),
     value = c(beta_0, beta_1, omega_0, tau_0, rho, tau_1, sigma),
@@ -311,10 +311,10 @@ single_run(n_pop = 10, n_rock = 50, beta_1 = 2)
 To get an accurate estimation of power, we need to run the simulation many times. Here we use the `future_map_dfr()` function to iterate over a sequence of integers denoting the replications we want to perform.
 
 ```{r}
-sims <- future_map_dfr(1:reps, ~ single_run())
+sims <- future_map_dfr(1:reps, ~ single_run(), .options = furrr_options(seed = TRUE))
 ```
 
-We can finally calculate power for our parameter of interest `beta_1`(denoted in the tidy model output table as the term `genre_i`) by filtering to keep only that term and the calculating the proportion of times the $p$-value is below the `alpha` (`r alpha`) threshold.
+We can finally calculate power for our parameter of interest `beta_1`(denoted in the tidy model output table as the term `genre_i`) by filtering to keep only that term and then calculating the proportion of times the $p$-value is below the `alpha` (`r alpha`) threshold.
 
 ```{r}
 # calculate mean estimates and power for specified alpha
@@ -331,11 +331,11 @@ sims |>
 
 ### Check false positive rate
 
-We can do a sanity check to see if our simulation is performing as expected by checking the false positive rate (Type I error rate). We set the effect of `genre_ij` (`beta_1`) to 0 to calculate the false positive rate, which is the probability of concluding there is an effect when there is no actual effect in the population.
+We can do a sanity check to see if our simulation is performing as expected by checking the false positive rate (Type I error rate). We set the effect of `genre_i` (`beta_1`) to 0 to calculate the false positive rate, which is the probability of concluding there is an effect when there is no actual effect in the population.
 
 ```{r}
 # run simulations and calculate the false positive rate
-sims_fp <- future_map_dfr(1:reps, ~ single_run(beta_1 = 0))
+sims_fp <- future_map_dfr(1:reps, ~ single_run(beta_1 = 0), .options = furrr_options(seed = TRUE))
 
 # calculate mean estimates and power for specified alpha
 sims_fp |>
@@ -350,7 +350,7 @@ Ideally, the false positive rate will be equal to `alpha`, which we set at `r al
 In real life, we will not know the effect size of our quantity of interest and so we will need to repeatedly perform the power analysis over a range of different plausible effect sizes. Perhaps we might also want to calculate power as we vary other data-generating parameters, such as the number of pop and rock songs sampled and the number of subjects sampled. We can create a table that combines all combinations of the parameters we want to vary in a grid.
 
 ```{r}
-# grid of paramater values of interest
+# grid of parameter values of interest
 pgrid <- crossing(
   n_subj = c(10, 25, 50),
   n_pop = c(10, 40),

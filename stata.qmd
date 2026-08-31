@@ -51,9 +51,35 @@ Note: these are Stata `global` macros (referenced as `$reps`) rather than `local
 
 ### Establish the data-generating parameters
 
-The first thing to do is to set up the parameters that govern the process we assume gave rise to the data - the *data-generating process*, or DGP. We previously decided upon the the data-generating parameters (see [Power of What?](power-of-what.qmd)), so we just need to code them here.
+The first thing to do is to set up the parameters that govern the process we assume gave rise to the data - the *data-generating process*, or DGP. We previously decided upon the data-generating parameters (see [Power of What?](power-of-what.qmd)), so we just need to code them here.
 
-Note: There is a difference between Stata and R and the Python: We decrease the data-generating parameters to simplify our model, and we delete some paramaters: by-song random intercept `omega_0`, by-subject random slope sd `tau_1`, and the correlation between intercept and slope `rho`.
+::: {.callout-important title="This chapter fits a simpler model than the R and Python chapters"}
+
+The R and Python chapters fit the full crossed design: a by-song random
+intercept, a by-subject random intercept, a by-subject random slope, and
+the correlation between the two subject effects. **This chapter drops three
+of those parameters** --- `omega_0`, `tau_1` and `rho` --- and fits a
+random-intercept model, `mixed liking_ij genre_i || subj_id:`.
+
+The reason is runtime, not principle. Stata *can* express the crossed
+design, as `mixed liking_ij genre_i || _all: R.song_id || subj_id: genre_i,
+cov(un)`, but fitting it thousands of times over a grid of parameter values
+takes days rather than minutes, which makes a power simulation of the kind
+this tutorial teaches impractical in Stata.
+
+Two consequences worth being explicit about:
+
+* **The power estimates here are optimistic.** Ignoring by-song variance and
+  the random slope shrinks the standard error of `beta_1`, so power comes
+  out higher than for the design the study actually has.
+* **They are not comparable with the R and Python chapters**, which answer a
+  different (and harder) question.
+
+Read this chapter for the Stata mechanics --- programs, `return`, matrices,
+looping a simulation --- and take the R or Python chapter as the reference
+for the design itself.
+
+:::
 
 ```{stata}
 // set all data-generating parameters
@@ -136,7 +162,7 @@ display "tau_0, " $tau_0 ", " tau_0_s
 
 #### Simulate trials
 
-Since all subjects rate all songs (i.e., the design is fully crossed) we can set up a table of trials by including every possible combination of the rows in the `subjects` and `songs` tables. Each trial has random error associated with it, reflecting fluctuations in trial-by-trial ratings due to unkown factors. We simulate this by sampling values from a univariate normal distribution with a mean of 0 and a standard deviation of `sigma`.
+Since all subjects rate all songs (i.e., the design is fully crossed) we can set up a table of trials by including every possible combination of the rows in the `subjects` and `songs` tables. Each trial has random error associated with it, reflecting fluctuations in trial-by-trial ratings due to unknown factors. We simulate this by sampling values from a univariate normal distribution with a mean of 0 and a standard deviation of `sigma`.
 
 ```{stata}
 // cross subject and song IDs; add an error term
@@ -202,7 +228,7 @@ matrix list b
 
 ## Data simulation automated
 
-Now that we've tested the data generating code, we can put it into a function so that it's easy to run it repeatedly.
+Now that we've tested the data generating code, we can put it into a *program* --- Stata's equivalent of a function --- so that it's easy to run it repeatedly.
 
 ```{stata}
 capture program define sim_data
@@ -243,7 +269,7 @@ end
 
 ## Power calculation single run
 
-We can wrap the data generating function and modeling code in a new function `single_run()` that returns the analysis results for a single simulation run. We'll suppress warnings and messages from the modeling fitting process, as these sometimes occur with simulation runs that generate extreme realized values for parameters.
+We can wrap the data generating function and modeling code in a new function `single_run()` that returns the analysis results for a single simulation run. The `noretable nofetable noheader nogroup` options keep `mixed` from printing a full table for every one of the thousands of fits.
 
 ```{stata}
 capture program define single_run, rclass
@@ -324,7 +350,7 @@ di "Power Mean: " power_mean
 
 ### Check false positive rate
 
-We can do a sanity check to see if our simulation is performing as expected by checking the false positive rate (Type I error rate). We set the effect of `genre_ij` (`beta_1`) to 0 to calculate the false positive rate, which is the probability of concluding there is an effect when there is no actual effect in the population.
+We can do a sanity check to see if our simulation is performing as expected by checking the false positive rate (Type I error rate). We set the effect of `genre_i` (`beta_1`) to 0 to calculate the false positive rate, which is the probability of concluding there is an effect when there is no actual effect in the population.
 
 ```{stata}
 // run simulations and calculate the false positive rate
@@ -356,7 +382,7 @@ Ideally, the false positive rate will be equal to `alpha`, which we set at 0.05.
 In real life, we will not know the effect size of our quantity of interest and so we will need to repeatedly perform the power analysis over a range of different plausible effect sizes. Perhaps we might also want to calculate power as we vary other data-generating parameters, such as the number of pop and rock songs sampled and the number of subjects sampled. We can create a table that combines all combinations of the parameters we want to vary in a grid.
 
 ```{stata}
-// grid of paramater values of interest
+// grid of parameter values of interest
 matrix define params = (10, 10, 10, 1 \ 10, 10, 10, 2 \ 10, 10, 10, 3 \ 10, 10, 10, 4 \ 10, 10, 10, 5 ///
 \ 10, 10, 40, 1 \ 10, 10, 40, 2 \ 10, 10, 40, 3 \ 10, 10, 40, 4 \ 10, 10, 40, 5 ///
 \ 10, 40, 10, 1 \ 10, 40, 10, 2 \ 10, 40, 10, 3 \ 10, 40, 10, 4 \ 10, 40, 10, 5 ///
@@ -433,7 +459,7 @@ rename final_results7 p_value
 drop in 1
 ```
 
-Now, as before, we can calculate power. But this time we'll group by all of the parameters we manipulated in `pgrid`, so that we can get power estimates for all combinations of parameter values.
+Now, as before, we can calculate power. But this time we'll group by all of the parameters we manipulated in `params`, so that we can get power estimates for all combinations of parameter values.
 
 ```{stata}
 gen power = 0
