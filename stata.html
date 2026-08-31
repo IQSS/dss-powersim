@@ -472,6 +472,7 @@ window.Quarto = {
   <li><a href="#setup" id="toc-setup" class="nav-link active" data-scroll-target="#setup">Setup</a></li>
   <li><a href="#data-simulation-step-by-step" id="toc-data-simulation-step-by-step" class="nav-link" data-scroll-target="#data-simulation-step-by-step">Data simulation step by step</a>
   <ul class="collapse">
+  <li><a href="#establish-the-simulation-parameters" id="toc-establish-the-simulation-parameters" class="nav-link" data-scroll-target="#establish-the-simulation-parameters">Establish the simulation parameters</a></li>
   <li><a href="#establish-the-data-generating-parameters" id="toc-establish-the-data-generating-parameters" class="nav-link" data-scroll-target="#establish-the-data-generating-parameters">Establish the data-generating parameters</a></li>
   <li><a href="#simulate-the-sampling-process" id="toc-simulate-the-sampling-process" class="nav-link" data-scroll-target="#simulate-the-sampling-process">Simulate the sampling process</a></li>
   <li><a href="#analyze-the-simulated-data" id="toc-analyze-the-simulated-data" class="nav-link" data-scroll-target="#analyze-the-simulated-data">Analyze the simulated data</a></li>
@@ -527,7 +528,9 @@ window.Quarto = {
 </section>
 <section id="data-simulation-step-by-step" class="level2">
 <h2 class="anchored" data-anchor-id="data-simulation-step-by-step">Data simulation step by step</h2>
-<p>To give an overview of the power simulation task, we will simulate data from a design with crossed random factors of subjects and songs (see <a href="./power-of-what.html">Power of What?</a> for design details), fit a model to the simulated data, recover from the model output the parameter values we put in, calculate power, and finally automate the whole process so that we can calculate power for different effect sizes. ### Establish the simulation parameters</p>
+<p>To give an overview of the power simulation task, we will simulate data from a design with crossed random factors of subjects and songs (see <a href="./power-of-what.html">Power of What?</a> for design details), fit a model to the simulated data, recover from the model output the parameter values we put in, calculate power, and finally automate the whole process so that we can calculate power for different effect sizes.</p>
+<section id="establish-the-simulation-parameters" class="level3">
+<h3 class="anchored" data-anchor-id="establish-the-simulation-parameters">Establish the simulation parameters</h3>
 <p>Before we start, let’s set some global parameters for our power simulations.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode stata code-with-copy"><code class="sourceCode stata"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">// number of simulation replications for power calculation</span></span>
@@ -537,6 +540,7 @@ window.Quarto = {
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="kw">global</span> <span class="kw">alpha</span> = 0.05</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Note: these are Stata <code>global</code> macros (referenced as <code>$reps</code>) rather than <code>local</code> ones. Each code block on this page runs as its own Stata session, and only globals, saved datasets, and programs carry over from one block to the next; in a single do-file, <code>local</code> macros would do the same job.</p>
+</section>
 <section id="establish-the-data-generating-parameters" class="level3">
 <h3 class="anchored" data-anchor-id="establish-the-data-generating-parameters">Establish the data-generating parameters</h3>
 <p>The first thing to do is to set up the parameters that govern the process we assume gave rise to the data - the <em>data-generating process</em>, or DGP. We previously decided upon the the data-generating parameters (see <a href="./power-of-what.html">Power of What?</a>), so we just need to code them here.</p>
@@ -866,15 +870,24 @@ y1   6.0726376   59.726807    2.002387   2.0872774</code></pre>
 <span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">estimates</span> <span class="kw">clear</span></span>
 <span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">estimates</span> <span class="kw">store</span> model_results</span>
 <span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">// calculate analysis results</span></span>
-<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">matrix</span> coefficients = <span class="fu">e</span>(b)</span>
-<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">matrix</span> std_errors = <span class="fu">e</span>(<span class="kw">V</span>)</span>
-<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">matrix</span> p_values = <span class="fu">e</span>(<span class="kw">p</span>)</span>
-<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> <span class="fu">scalar</span> coef = coefficients[1, 1]</span>
-<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> <span class="fu">scalar</span> std_err = std_errors[1, 1]</span>
-<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> <span class="fu">scalar</span> p_value = p_values[1, 1]</span>
-<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>  <span class="co">// calculate analysis results.</span></span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">// `e(b)` holds the coefficients and `e(V)` the variance-covariance matrix,</span></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>  <span class="co">// so the standard error of the first coefficient is the square root of</span></span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>  <span class="co">// `e(V)[1,1]` -- not `e(V)[1,1]` itself, which is a variance. `mixed`</span></span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>  <span class="co">// reports z tests, so the p-value for that one coefficient comes from the</span></span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>  <span class="co">// normal distribution. (`e(p)` would give the p-value for the overall</span></span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>  <span class="co">// model Wald test, which is a different quantity as soon as the model has</span></span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a>  <span class="co">// more than one fixed effect.)</span></span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">matrix</span> coefficients = <span class="fu">e</span>(b)</span>
+<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">matrix</span> <span class="kw">V</span> = <span class="fu">e</span>(<span class="kw">V</span>)</span>
+<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-22"><a href="#cb23-22" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scalar</span> b1 = coefficients[1, 1]</span>
+<span id="cb23-23"><a href="#cb23-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">scalar</span> se1 = <span class="fu">sqrt</span>(<span class="kw">V</span>[1, 1])</span>
+<span id="cb23-24"><a href="#cb23-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-25"><a href="#cb23-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> <span class="fu">scalar</span> coef = b1</span>
+<span id="cb23-26"><a href="#cb23-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> <span class="fu">scalar</span> std_err = se1</span>
+<span id="cb23-27"><a href="#cb23-27" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span> <span class="fu">scalar</span> p_value = 2 * <span class="fu">normal</span>(-<span class="fu">abs</span>(b1 / se1))</span>
+<span id="cb23-28"><a href="#cb23-28" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Let’s test that our new <code>single_run()</code> function performs as expected.</p>
 <div class="cell">
@@ -901,7 +914,7 @@ Computing standard errors ...
 
 scalars:
             r(p_value) =  4.72641356735e-25
-            r(std_err) =  .3582958340475783
+            r(std_err) =  .5985781770559117
                r(coef) =  6.188306213378898</code></pre>
 </div>
 </div>
@@ -929,7 +942,7 @@ Computing standard errors ...
 
 scalars:
             r(p_value) =  .0000102758196073
-            r(std_err) =  .2962159160224037
+            r(std_err) =  .5442572149474949
                r(coef) =  2.400874560546836</code></pre>
 </div>
 </div>
@@ -1427,7 +1440,7 @@ Number of observations (_N) was 0, now 30.
 
 Coef. Mean: 4.8985529
 
-Std.Err. Mean: .34172475
+Std.Err. Mean: .58440232
 
 Power Mean: 1</code></pre>
 </div>
@@ -2882,66 +2895,66 @@ matrices:
 
 r(RE)[60,7]
              c1          c2          c3          c4          c5          c6          c7
- r1          10          10          10           1   1.6232882   1.2450583   .14572695
- r2          10          10          10           2   2.0062973   1.1894022   .06582231
- r3          10          10          10           3   3.4475682   1.4126005   .00372327
- r4          10          10          10           4    4.392934   1.1682483   .00004817
- r5          10          10          10           5   2.9197601   1.2532444   .00910383
- r6          10          10          40           1   .72868919   .81688852   .42010813
- r7          10          10          40           2    2.064945    .7697031   .01858875
- r8          10          10          40           3   3.4548373    .7724561   .00008463
- r9          10          10          40           4   4.0100965    .8047475   7.815e-06
-r10          10          10          40           5   4.4327375   .78346073   5.500e-07
-r11          10          40          10           1   .27104625   .77760309   .75856018
-r12          10          40          10           2   1.3236057   .84641239     .150238
-r13          10          40          10           3    3.637113   .87194968   .00009819
-r14          10          40          10           4    4.160315   .79989617   3.292e-06
-r15          10          40          10           5    5.580889   .72610506   5.776e-11
-r16          10          40          40           1   .52009808   .29546828   .33865859
-r17          10          40          40           2   1.4540983   .31496902     .009571
-r18          10          40          40           3   2.3241734   .32993865   .00005205
-r19          10          40          40           4    2.576086   .30590147   3.198e-06
-r20          10          40          40           5   4.4130311   .35088605   9.337e-14
-r21          25          10          10           1  -.00893333   .48705701   .98978703
-r22          25          10          10           2   .30779735   .48258177   .65770988
-r23          25          10          10           3   2.9344834   .50989978   .00003965
-r24          25          10          10           4   4.1778176   .52946181   9.379e-09
-r25          25          10          10           5   5.9155021    .4973661   4.949e-17
-r26          25          10          40           1   1.2316509   .31347793   .02782074
-r27          25          10          40           2   1.7095442   .33303197   .00305294
-r28          25          10          40           3   2.2368743   .33024954   .00009925
-r29          25          10          40           4   5.0258179   .33807024   5.439e-18
-r30          25          10          40           5   4.2731111   .32285629   5.462e-14
-r31          25          40          10           1   1.0390381   .35040544   .07921167
-r32          25          40          10           2   1.6820734   .32435127   .00314191
-r33          25          40          10           3   2.8046594   .32975873   1.039e-06
-r34          25          40          10           4   4.5576676   .30369294   1.335e-16
-r35          25          40          10           5   5.0608711   .34170764   4.818e-18
-r36          25          40          40           1   .33545354   .11618701   .32505034
-r37          25          40          40           2   2.2642519   .13101547   3.962e-10
-r38          25          40          40           3   3.4540547   .13294921   2.720e-21
-r39          25          40          40           4   4.4082392   .12995166   2.189e-34
-r40          25          40          40           5   4.7617614   .12817298   2.298e-40
-r41          50          10          10           1   1.3775731    .2403085   .00495178
-r42          50          10          10           2   2.0671036   .25478213   .00004218
-r43          50          10          10           3    3.837408   .26417888   8.266e-14
-r44          50          10          10           4   4.0094784   .25801207   2.939e-15
-r45          50          10          10           5   4.5509756   .24392978   3.127e-20
-r46          50          10          40           1   .54634245   .16643311   .18050594
-r47          50          10          40           2   1.8403869   .15974819   4.133e-06
-r48          50          10          40           3   2.8412234   .15462529   4.994e-13
-r49          50          10          40           4   3.6821123   .16552159   1.424e-19
-r50          50          10          40           5   4.7523879   .16542078   1.527e-31
-r51          50          40          10           1   .66228735   .15485537   .09237569
-r52          50          40          10           2   2.3323298   .16369473   8.183e-09
-r53          50          40          10           3   2.8560804   .16944154   3.965e-12
-r54          50          40          10           4    3.708818   .15927976   1.500e-20
-r55          50          40          10           5   4.3577439   .15393203   1.160e-28
-r56          50          40          40           1   .81108118   .06740903   .00178436
-r57          50          40          40           2   1.9790338   .06525435   9.389e-15
-r58          50          40          40           3   2.6718788   .06426333   5.658e-26
-r59          50          40          40           4   4.0181741   .06539426   1.232e-55
-r60          50          40          40           5   4.7752599   .06401609   1.884e-79</code></pre>
+ r1          10          10          10           1   1.6232882   1.1158218   .14572695
+ r2          10          10          10           2   2.0062973   1.0905972   .06582231
+ r3          10          10          10           3   3.4475682   1.1885287   .00372327
+ r4          10          10          10           4    4.392934   1.0808553   .00004817
+ r5          10          10          10           5   2.9197601    1.119484   .00910383
+ r6          10          10          40           1   .72868919   .90381885   .42010813
+ r7          10          10          40           2    2.064945   .87732725   .01858875
+ r8          10          10          40           3   3.4548373   .87889482   .00008463
+ r9          10          10          40           4   4.0100965    .8970772   7.815e-06
+r10          10          10          40           5   4.4327375   .88513317   5.500e-07
+r11          10          40          10           1   .27104625   .88181806   .75856018
+r12          10          40          10           2   1.3236057   .92000673     .150238
+r13          10          40          10           3    3.637113   .93378246   .00009819
+r14          10          40          10           4    4.160315   .89436915   3.292e-06
+r15          10          40          10           5    5.580889   .85211799   5.776e-11
+r16          10          40          40           1   .52009808   .54356994   .33865859
+r17          10          40          40           2   1.4540983     .561221     .009571
+r18          10          40          40           3   2.3241734   .57440286   .00005205
+r19          10          40          40           4    2.576086    .5530836   3.198e-06
+r20          10          40          40           5   4.4130311   .59235635   9.337e-14
+r21          25          10          10           1  -.00893333   .69789469   .98978703
+r22          25          10          10           2   .30779735   .69468105   .65770988
+r23          25          10          10           3   2.9344834   .71407267   .00003965
+r24          25          10          10           4   4.1778176   .72764127   9.379e-09
+r25          25          10          10           5   5.9155021   .70524187   4.949e-17
+r26          25          10          40           1   1.2316509     .559891   .02782074
+r27          25          10          40           2   1.7095442   .57708922   .00305294
+r28          25          10          40           3   2.2368743   .57467342   .00009925
+r29          25          10          40           4   5.0258179   .58143808   5.439e-18
+r30          25          10          40           5   4.2731111   .56820444   5.462e-14
+r31          25          40          10           1   1.0390381   .59195054   .07921167
+r32          25          40          10           2   1.6820734   .56951845   .00314191
+r33          25          40          10           3   2.8046594   .57424622   1.039e-06
+r34          25          40          10           4   4.5576676   .55108343   1.335e-16
+r35          25          40          10           5   5.0608711   .58455764   4.818e-18
+r36          25          40          40           1   .33545354   .34086215   .32505034
+r37          25          40          40           2   2.2642519   .36196059   3.962e-10
+r38          25          40          40           3   3.4540547   .36462201   2.720e-21
+r39          25          40          40           4   4.4082392   .36048809   2.189e-34
+r40          25          40          40           5   4.7617614   .35801254   2.298e-40
+r41          50          10          10           1   1.3775731   .49021271   .00495178
+r42          50          10          10           2   2.0671036   .50475948   .00004218
+r43          50          10          10           3    3.837408   .51398335   8.266e-14
+r44          50          10          10           4   4.0094784   .50794888   2.939e-15
+r45          50          10          10           5   4.5509756   .49389248   3.127e-20
+r46          50          10          40           1   .54634245   .40796215   .18050594
+r47          50          10          40           2   1.8403869   .39968512   4.133e-06
+r48          50          10          40           3   2.8412234   .39322423   4.994e-13
+r49          50          10          40           4   3.6821123   .40684345   1.424e-19
+r50          50          10          40           5   4.7523879   .40671954   1.527e-31
+r51          50          40          10           1   .66228735   .39351667   .09237569
+r52          50          40          10           2   2.3323298   .40459205   8.183e-09
+r53          50          40          10           3   2.8560804   .41163277   3.965e-12
+r54          50          40          10           4    3.708818   .39909868   1.500e-20
+r55          50          40          10           5   4.3577439   .39234172   1.160e-28
+r56          50          40          40           1   .81108118   .25963249   .00178436
+r57          50          40          40           2   1.9790338   .25544931   9.389e-15
+r58          50          40          40           3   2.6718788   .25350213   5.658e-26
+r59          50          40          40           4   4.0181741   .25572301   1.232e-55
+r60          50          40          40           5   4.7752599   .25301401   1.884e-79</code></pre>
 </div>
 </div>
 <p>Then we just repeatedly call <code>parameter_search()</code> for the number of times specified by <code>reps</code> and store the result in a matrix <code>final_results</code>. Fair warning, this will take some time if you have set a high number of replications!</p>
@@ -30000,77 +30013,77 @@ Number of observations (_N) was 0, now 1,801.
      +-------------------------------------------------------------------+
      | n_subj   n_pop   n_rock   beta_1   mean_e~e    mean_se      power |
      |-------------------------------------------------------------------|
-  1. |     10      10       10        1   .8518804   1.306415   .1333333 |
-  2. |     10      10       10        2   2.015188   1.287959   .3666667 |
-  3. |     10      10       10        3   3.611707   1.260591   .9333333 |
-  4. |     10      10       10        4    4.21382   1.223126   .9666666 |
-  5. |     10      10       10        5   4.915577   1.293234   .9666666 |
+  1. |     10      10       10        1   .8518804   1.141737   .1333333 |
+  2. |     10      10       10        2   2.015188   1.132307   .3666667 |
+  3. |     10      10       10        3   3.611707   1.120993   .9333333 |
+  4. |     10      10       10        4    4.21382   1.104315   .9666666 |
+  5. |     10      10       10        5   4.915577   1.136141   .9666666 |
      |-------------------------------------------------------------------|
-  6. |     10      10       40        1   .9646611    .802318         .2 |
-  7. |     10      10       40        2   1.711715   .7965869   .4333333 |
-  8. |     10      10       40        3   3.147715    .793627   .9333333 |
-  9. |     10      10       40        4   4.225182   .7836059          1 |
- 10. |     10      10       40        5   4.858223   .7991707          1 |
+  6. |     10      10       40        1   .9646611   .8951944         .2 |
+  7. |     10      10       40        2   1.711715   .8920619   .4333333 |
+  8. |     10      10       40        3   3.147715   .8905005   .9333333 |
+  9. |     10      10       40        4   4.225182   .8847606          1 |
+ 10. |     10      10       40        5   4.858223    .893694          1 |
      |-------------------------------------------------------------------|
- 11. |     10      40       10        1   .9916084   .8146061   .1666667 |
- 12. |     10      40       10        2   2.137048   .8025212   .7333333 |
- 13. |     10      40       10        3   2.921423   .8035893   .9666666 |
- 14. |     10      40       10        4   3.927615   .8123679          1 |
- 15. |     10      40       10        5   5.021795   .7891029          1 |
+ 11. |     10      40       10        1   .9916084   .9020945   .1666667 |
+ 12. |     10      40       10        2   2.137048   .8952654   .7333333 |
+ 13. |     10      40       10        3   2.921423   .8960313   .9666666 |
+ 14. |     10      40       10        4   3.927615   .9008403          1 |
+ 15. |     10      40       10        5   5.021795   .8879496          1 |
      |-------------------------------------------------------------------|
- 16. |     10      40       40        1   .9360849   .3171641   .4666667 |
- 17. |     10      40       40        2   2.014773   .3186032   .9666666 |
- 18. |     10      40       40        3   3.194465   .3158977          1 |
- 19. |     10      40       40        4   3.932215   .3165539          1 |
- 20. |     10      40       40        5   4.919777   .3173957          1 |
+ 16. |     10      40       40        1   .9360849   .5630384   .4666667 |
+ 17. |     10      40       40        2   2.014773    .564294   .9666666 |
+ 18. |     10      40       40        3   3.194465   .5618773          1 |
+ 19. |     10      40       40        4   3.932215   .5624282          1 |
+ 20. |     10      40       40        5   4.919777    .563199          1 |
      |-------------------------------------------------------------------|
- 21. |     25      10       10        1   1.001032   .5095627   .3666667 |
- 22. |     25      10       10        2   1.857444   .5021507   .7333333 |
- 23. |     25      10       10        3   2.962331   .5107058          1 |
- 24. |     25      10       10        4   4.040242   .5044103          1 |
- 25. |     25      10       10        5   5.029236   .5195436          1 |
+ 21. |     25      10       10        1   1.001032   .7134387   .3666667 |
+ 22. |     25      10       10        2   1.857444   .7081969   .7333333 |
+ 23. |     25      10       10        3   2.962331   .7142764          1 |
+ 24. |     25      10       10        4   4.040242   .7099513          1 |
+ 25. |     25      10       10        5   5.029236   .7204227          1 |
      |-------------------------------------------------------------------|
- 26. |     25      10       40        1    1.04707   .3165536   .4666667 |
- 27. |     25      10       40        2   1.980402   .3160377         .9 |
- 28. |     25      10       40        3    2.90913   .3198149          1 |
- 29. |     25      10       40        4   4.030881    .314913          1 |
- 30. |     25      10       40        5    5.10218   .3222979          1 |
+ 26. |     25      10       40        1    1.04707    .562542   .4666667 |
+ 27. |     25      10       40        2   1.980402   .5620445         .9 |
+ 28. |     25      10       40        3    2.90913   .5654351          1 |
+ 29. |     25      10       40        4   4.030881   .5610904          1 |
+ 30. |     25      10       40        5    5.10218   .5675955          1 |
      |-------------------------------------------------------------------|
- 31. |     25      40       10        1   1.077121   .3198888   .4666667 |
- 32. |     25      40       10        2   1.885855   .3187737         .8 |
- 33. |     25      40       10        3   3.096456    .321368          1 |
- 34. |     25      40       10        4   3.788902   .3201349          1 |
- 35. |     25      40       10        5   4.948807   .3149243          1 |
+ 31. |     25      40       10        1   1.077121   .5654775   .4666667 |
+ 32. |     25      40       10        2   1.885855   .5645031         .8 |
+ 33. |     25      40       10        3   3.096456    .566758          1 |
+ 34. |     25      40       10        4   3.788902   .5657208          1 |
+ 35. |     25      40       10        5   4.948807   .5610379          1 |
      |-------------------------------------------------------------------|
- 36. |     25      40       40        1   1.045176   .1293158         .8 |
- 37. |     25      40       40        2   2.039793    .128508          1 |
- 38. |     25      40       40        3   3.000777   .1278319          1 |
- 39. |     25      40       40        4   4.051725   .1279099          1 |
- 40. |     25      40       40        5   4.989923   .1283822          1 |
+ 36. |     25      40       40        1   1.045176    .359548         .8 |
+ 37. |     25      40       40        2   2.039793   .3584379          1 |
+ 38. |     25      40       40        3   3.000777      .3575          1 |
+ 39. |     25      40       40        4   4.051725   .3576072          1 |
+ 40. |     25      40       40        5   4.989923   .3582708          1 |
      |-------------------------------------------------------------------|
- 41. |     50      10       10        1   .9883525   .2539575         .5 |
- 42. |     50      10       10        2   2.097131   .2531747          1 |
- 43. |     50      10       10        3   2.930882   .2535735          1 |
- 44. |     50      10       10        4   3.749865   .2561408          1 |
- 45. |     50      10       10        5   4.924335   .2566732          1 |
+ 41. |     50      10       10        1   .9883525   .5038117         .5 |
+ 42. |     50      10       10        2   2.097131   .5030216          1 |
+ 43. |     50      10       10        3   2.930882    .503418          1 |
+ 44. |     50      10       10        4   3.749865    .506022          1 |
+ 45. |     50      10       10        5   4.924335   .5064674          1 |
      |-------------------------------------------------------------------|
- 46. |     50      10       40        1   .9503928   .1604711   .7666667 |
- 47. |     50      10       40        2   2.080426   .1586829          1 |
- 48. |     50      10       40        3   3.110132   .1621119          1 |
- 49. |     50      10       40        4   3.863661   .1597703          1 |
- 50. |     50      10       40        5   4.919541   .1585928          1 |
+ 46. |     50      10       40        1   .9503928   .4005601   .7666667 |
+ 47. |     50      10       40        2   2.080426   .3983279          1 |
+ 48. |     50      10       40        3   3.110132   .4025852          1 |
+ 49. |     50      10       40        4   3.863661   .3996685          1 |
+ 50. |     50      10       40        5   4.919541   .3981874          1 |
      |-------------------------------------------------------------------|
- 51. |     50      40       10        1   1.049417   .1605636   .7666667 |
- 52. |     50      40       10        2   1.947035   .1608201          1 |
- 53. |     50      40       10        3   2.997617   .1601283          1 |
- 54. |     50      40       10        4   3.996079   .1601684          1 |
- 55. |     50      40       10        5   5.119928   .1601339          1 |
+ 51. |     50      40       10        1   1.049417   .4006564   .7666667 |
+ 52. |     50      40       10        2   1.947035    .400966          1 |
+ 53. |     50      40       10        3   2.997617   .4001157          1 |
+ 54. |     50      40       10        4   3.996079   .4001718          1 |
+ 55. |     50      40       10        5   5.119928   .4001527          1 |
      |-------------------------------------------------------------------|
- 56. |     50      40       40        1   1.044287   .0643181   .9666666 |
- 57. |     50      40       40        2   2.006066   .0639573          1 |
- 58. |     50      40       40        3   3.013493   .0641749          1 |
- 59. |     50      40       40        4   3.971136   .0637372          1 |
- 60. |     50      40       40        5    4.98772   .0643943          1 |
+ 56. |     50      40       40        1   1.044287      .2536   .9666666 |
+ 57. |     50      40       40        2   2.006066   .2528845          1 |
+ 58. |     50      40       40        3   3.013493   .2533133          1 |
+ 59. |     50      40       40        4   3.971136   .2524456          1 |
+ 60. |     50      40       40        5    4.98772   .2537428          1 |
      +-------------------------------------------------------------------+
 
 (file sims_table.dta not found)
