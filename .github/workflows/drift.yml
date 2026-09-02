@@ -12,10 +12,12 @@
 # the failure. The two things it fails on:
 #
 #   1. the render failed        - a package changed in a way the materials do not survive
-#   2. a deprecation was raised - this guide already shows warnings, so anything new here is
-#                                 something a reader would now meet on the page itself.
+#   2. a deprecation was raised - the pages set `warning: false` in their front matter, so these
+#                                 are invisible on the site while a reader running the same chunk
+#                                 meets them in their own console.
 #
-# Everything worth reading is written to the run summary, which the notification links to.
+# Findings go to both the step log and the run summary. The summary is the readable one, but it
+# cannot be fetched from the API, which is how the first failing run left nothing to look at.
 #
 # stata.qmd is excluded and keeps its committed freeze: Stata is licensed per machine and cannot
 # run on a hosted runner, and that chapter mixes {r} and {stata} chunks, so it cannot be half
@@ -51,6 +53,14 @@ jobs:
       - uses: astral-sh/setup-uv@v6
       - run: uv sync --frozen
 
+      # Show the warnings the pages hide. warning: false sits in each page's YAML
+      # front matter, not in _quarto.yml.
+      - name: Unhide warnings and messages
+        run: |
+          sed -i 's/^  warning: false$/  warning: true/; s/^  message: false$/  message: true/' \
+            r.qmd python.qmd power-analysis.qmd power-of-what.qmd
+          grep -c 'warning: true' r.qmd python.qmd power-analysis.qmd power-of-what.qmd || true
+
       # Force execution of everything that can run here; the Stata chapter keeps its freeze.
       - name: Drop the R and Python freezes
         run: rm -rf _freeze/r _freeze/python _freeze/power-analysis _freeze/power-of-what
@@ -65,6 +75,10 @@ jobs:
           grep -hoiE "[^<>]{0,80}(is deprecated|was deprecated|deprecated in|superseded|defunct)[^<>]{0,120}" \
             _site/*.html render.log 2>/dev/null \
             | sed 's/&quot;/"/g; s/&#39;/'"'"'/g' | sort -u > findings.txt || true
+
+          echo "--- findings ---"
+          cat findings.txt || true
+          echo "--- end findings ---"
 
           {
             echo "## Drift check"
