@@ -8,7 +8,7 @@ execute:
 
 ```{python}
 #| include: false
-# Figures for a page in light or dark (2026-08-29): no figure background; text, axes, and ticks in a grey that reads on either ground.
+# Figures for a page in light or dark (2026-08-29): no figure background; text, axes, and ticks in a gray that reads on either ground.
 import matplotlib as mpl
 mpl.rcParams.update({"figure.facecolor": "none", "savefig.facecolor": "none", "legend.facecolor": "none",
                      "text.color": "#7b8698", "axes.labelcolor": "#7b8698", "axes.edgecolor": "#7b8698",
