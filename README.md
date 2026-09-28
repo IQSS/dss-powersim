@@ -25,5 +25,5 @@ Python, or Stata on the runner. Re-executing a page needs:
 
 ## Contributing
 
-GPL-3.0 (`LICENSE`). Comments and suggestions through the Request help
+MIT for code (`LICENSE`), CC BY 4.0 for the text and figures (`LICENSE-content`). Comments and suggestions through the Request help
 button on every page.
