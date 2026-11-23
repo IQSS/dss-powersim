@@ -52,11 +52,11 @@ plan(multisession)
 
 ## Data simulation step by step
 
-To give an overview of the power simulation task, we will simulate data from a design with crossed random factors of subjects and songs (see [Power of What?](power-of-what.qmd) for design details), fit a model to the simulated data, recover from the model output the parameter values we put in, calculate power, and finally automate the whole process so that we can calculate power for different effect sizes. Much of the general workflow here is borrowed from [DeBruine & Barr (2021) Understanding Mixed-Effects Models through Simulation](https://journals.sagepub.com/doi/full/10.1177/2515245920965119). We'll start by writing code that simulates datasets under the alternative hypothesis.
+To give an overview of the power simulation task, we will simulate data from a design with crossed random factors of subjects and songs (see [Power of What?](power-of-what.qmd) for design details), fit a model to the simulated data, recover from the model output the parameter values we put in, calculate power, and finally automate the whole process so that we can calculate power for different effect sizes. Much of the general workflow here is borrowed from [DeBruine & Barr (2021) Understanding Mixed-Effects Models Through Data Simulation](https://journals.sagepub.com/doi/full/10.1177/2515245920965119). We'll start by writing code that simulates datasets under the alternative hypothesis.
 
 ### Establish the simulation parameters
 
-Before we start, let's set some global parameters for our power simulations. Since simulations can take a long time to run, we'll use 100 replications here as an example, but we recommend increasing this number to at least 1000 replications for a more accurate final power calculation.
+Before we start, let's set some global parameters for our power simulations. Since simulations can take a long time to run, we'll use 100 replications here as an example, but we recommend increasing this number to at least 1000 replications for a more accurate final power calculation. To keep their run times short, the Python and Stata chapters use 30 replications, and the Python chapter also uses a smaller grid of parameter values.
 
 ```{r}
 # number of simulation replicates for power calculation
@@ -73,7 +73,7 @@ The first thing to do is to set up the parameters that govern the process we ass
 ```{r}
 #| label: params-all
 # set all data-generating parameters
-beta_0  <-  60   # intercept; i.e., the grand mean
+beta_0  <-  60   # intercept; i.e., the mean for the pop genre
 beta_1  <-   5   # slope; i.e, effect of category
 omega_0 <-   3   # by-song random intercept sd
 tau_0   <-   7   # by-subject random intercept sd
@@ -112,7 +112,7 @@ print(songs, n=10)
 
 #### Simulate the sampling of subjects
 
-Now we simulate the sampling of participants, which results in table listing each individual and their two correlated random effects (a random intercept and random slope). To do this, we must sample ${T_{0j}, T_{1j}}$ pairs - one for each subject - from a bivariate normal distribution.
+Now we simulate the sampling of participants, which results in a table listing each individual and their two correlated random effects (a random intercept and random slope). To do this, we must sample ${T_{0j}, T_{1j}}$ pairs - one for each subject - from a bivariate normal distribution.
 
 We will use the function `faux::rnorm_multi()`, which generates a table of `n` simulated values from a multivariate normal distribution by specifying the means (`mu`) and standard deviations (`sd`) of each variable, plus the correlations (`r`), which can be either a single value (applied to all pairs), a correlation matrix, or a vector of the values in the upper right triangle of the correlation matrix.
 
@@ -164,7 +164,7 @@ print(trials, n=10)
 
 #### Calculate response values
 
-With this resulting `trials` table, in combination with the constants `beta_0` and `beta_1`, we have the full set of values that we need to compute the response variable `liking_ij` according the linear model we defined previously (see [Power of What?](power-of-what.qmd)).
+With this resulting `trials` table, in combination with the constants `beta_0` and `beta_1`, we have the full set of values that we need to compute the response variable `liking_ij` according to the linear model we defined previously (see [Power of What?](power-of-what.qmd)).
 
 ```{r}
 dat_sim <- trials |>
@@ -219,16 +219,25 @@ mod_sim <- lmer(form, data = dat_sim)
 summary(mod_sim, corr = FALSE)
 ```
 
-We can use the `broom.mixed::tidy()` function to get a tidy table of the results. This will prove to be super useful later when we need to combine the output from hundreds of simulations to calculate power. We will add columns for `parameter` and `value`, so we can compare the estimate from the model to the parameters we used to simulate the data. 
+We can use the `broom.mixed::tidy()` function to get a tidy table of the results. This will prove to be super useful later when we need to combine the output from hundreds of simulations to calculate power. We will add columns for `parameter` and `value`, matched to the model output by `group` and `term`, so we can compare the estimate from the model to the parameters we used to simulate the data.
 
 ```{r}
+# the parameter that each row of the model output estimates
+param_labels <- tribble(
+  ~group,     ~term,                      ~parameter, ~value,
+  NA,         "(Intercept)",              "beta_0",   beta_0,
+  NA,         "genre_i",                  "beta_1",   beta_1,
+  "song_id",  "sd__(Intercept)",          "omega_0",  omega_0,
+  "subj_id",  "sd__(Intercept)",          "tau_0",    tau_0,
+  "subj_id",  "sd__genre_i",              "tau_1",    tau_1,
+  "subj_id",  "cor__(Intercept).genre_i", "rho",      rho,
+  "Residual", "sd__Observation",          "sigma",    sigma
+)
+
 # get a tidy table of results
 broom.mixed::tidy(mod_sim) |>
   mutate(across(where(is.numeric), \(x) round(x, 3))) |>
-  mutate(
-    parameter = c("beta_0", "beta_1", "omega_0", "tau_0", "rho", "tau_1", "sigma"),
-    value = c(beta_0, beta_1, omega_0, tau_0, rho, tau_1, sigma),
-  ) |>
+  left_join(param_labels, by = c("group", "term")) |> # match by name, not by row position
   select(term, parameter, value, estimate) |>
   knitr::kable()
 ```
@@ -359,7 +368,7 @@ pgrid <- crossing(
 )
 ```
 
-We can now wrap our `single_run()` function within a more general function `parameter_search()` that takes the grid of parameter values as input and uses the `future_pmap_dfr()` function to iterate over each row of parameter values in `pgrid` and feed them into `single_run()`.
+We can now wrap our `single_run()` function within a more general function `parameter_search()` that takes the grid of parameter values as input and uses the `future_pmap_dfr()` function to iterate over each row of parameter values in `pgrid` and feed them into `single_run()`. Each set of results keeps the parameter values that produced it.
 
 ```{r}
 # fit the models over the parameters
@@ -368,12 +377,13 @@ parameter_search <- function(params = pgrid){
     .l = params, # iterate over the grid of parameter values
     .f = ~ single_run(
              n_subj = ..1, # plug each row of parameter values into single_run()
-             n_pop  = ..2, 
+             n_pop  = ..2,
              n_rock = ..3,
              beta_1 = ..4
-             ),
-    .options = furrr_options(seed = TRUE),
-    .progress = TRUE
+             ) |>
+           # keep the parameter values alongside the results they produced
+           mutate(n_subj = ..1, n_pop = ..2, n_rock = ..3, beta_1 = ..4, .before = 1),
+    .options = furrr_options(seed = TRUE)
   )
 }
 ```
@@ -387,20 +397,14 @@ parameter_search()
 To run multiple replications of `parameter_search()`, we can use the `future_replicate()` function, which just repeatedly calls `parameter_search()` for the number of times specified by `reps`. Fair warning, this will take some time if you have set a high number of replications!
 
 ```{r}
-# replicate the parameter grid to match the dimensions of the model outputs
-pgrid_expand <- pgrid |> 
-  slice(rep(1:n(), each = 7)) |> # replicate each row by 7 parameters
-  map_df(rep.int, times = reps) # replicate the whole grid by number of reps
-
 # replicate the parameter search many times
 sims_params <- future_replicate(
-    n = reps, 
-    expr = parameter_search(), 
+    n = reps,
+    expr = parameter_search(),
     simplify = FALSE
     ) |>
   imap( ~ mutate(.x, rep = .y, .before = "effect")) |> # include rep ID
-  bind_rows() |> # combine into a single tibble
-  mutate(pgrid_expand, .before = "effect") # add in the parameter grid values
+  bind_rows() # combine into a single tibble
 ```
 
 Now, as before, we can calculate power. But this time we'll group by all of the parameters we manipulated in `pgrid`, so that we can get power estimates for all combinations of parameter values.

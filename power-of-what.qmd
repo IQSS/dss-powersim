@@ -7,7 +7,7 @@ execute:
 
 ```{r}
 #| include: false
-pacman::p_load(tidyverse, papaja, knitr)  # the two parameter tables below (apa_table) and the pipe
+pacman::p_load(tidyverse, knitr)  # the two parameter tables below (kable) and the pipe
 ```
 
 The initial steps of power simulation involve nothing more than thinking and writing down your thoughts using a pencil and paper. But, prior to walking through these steps, there is an even more fundamental issue to be addressed - the power of what?
@@ -18,7 +18,7 @@ What quantity within our model do we wish to calculate power for? Overall model 
 
 The study design we will use as an example throughout this tutorial comes from Julian Quandt's blogpost (<https://julianquandt.com/posts/2020-08-05-power-analysis-by-data-simulation-in-r-part-iv.html>). He describes this as:
 
-> A new hypothetical research question focused on music preference. The overarching research goal will be to find out whether Rock or Pop music is better. Of course, we could just ask people what they prefer, but we want a more objective measure of what is Rock and Pop (people might have different ideas about the genres). Therefore, we will have participants listen to a bunch of different songs that are either from a Spotify "best-of-pop" or "best-of-rock" playlist and have them rate each song on an evaluation scale from 0-100 points. 
+> Throughout this tutorial, we will use a new hypothetical research question focused on music preference. The overarching research goal will be to - once and for all - find out whether Rock or Pop music is better. Of course, we could just ask people what they prefer, but we do not want to do that because we want a more objective measure of what is Rock and Pop (people might have different ideas about the genres). Therefore, we will have participants listen to a bunch of different songs that are either from a Spotify "best-of-pop" or "best-of-rock" playlist and have them rate the song on a evaluation scale from 0-100 points.
 
 ## Mixed effects model
 
@@ -34,12 +34,12 @@ $$
 \textrm{liking}_{ij} = \beta_0 + T_{0j} + O_{0i} + (\beta_1 + T_{1j}) \times \textrm{genre}_i + \epsilon_{ij}
 $$
 
-where the subscripts $i$ and $j$ denote individual songs and participants, respectively, `liking` is an integer-based rating of a given song on the interval [0, 100], `genre` is a dummy coded binary variable indicating whether the song is classified as "rock" or "pop", and we assume the two by-subject effects are drawn together from a bivariate normal, $\begin{pmatrix} T_{0j} \\ T_{1j} \end{pmatrix} \sim \mathcal{N}\left( \begin{pmatrix} 0 \\ 0 \end{pmatrix}, \begin{pmatrix} \tau_0^2 & \rho\tau_0\tau_1 \\ \rho\tau_0\tau_1 & \tau_1^2 \end{pmatrix} \right)$, with $O_{0i} \sim \mathcal{N}(0, \omega_0)$ and $\epsilon_{ij} \sim \mathcal{N}(0, \sigma)$ (the second argument in each case is a standard deviation, not a variance). The parameter of interest is $\beta_1$ - the average (within-subject) difference in the rating of songs between the two genres. Table 3.1 lists all of the variables and parameters in the model. 
+where the subscripts $i$ and $j$ denote individual songs and participants, respectively, `liking` is an integer-based rating of a given song on the interval [0, 100], `genre` is a dummy coded binary variable indicating whether the song is classified as "rock" or "pop", and we assume the two by-subject effects are drawn together from a bivariate normal, $\begin{pmatrix} T_{0j} \\ T_{1j} \end{pmatrix} \sim \mathcal{N}\left( \begin{pmatrix} 0 \\ 0 \end{pmatrix}, \begin{pmatrix} \tau_0^2 & \rho\tau_0\tau_1 \\ \rho\tau_0\tau_1 & \tau_1^2 \end{pmatrix} \right)$, with $O_{0i} \sim \mathcal{N}(0, \omega_0)$ and $\epsilon_{ij} \sim \mathcal{N}(0, \sigma)$ (the second argument in each case is a standard deviation, not a variance). The parameter of interest is $\beta_1$ - the average (within-subject) difference in the rating of songs between the two genres. @tbl-param-def lists all of the variables and parameters in the model.
 
 ```{r}
-#| label: param-def
+#| label: tbl-param-def
 #| echo: false
-#| results: "asis"
+#| tbl-cap: "Variables in the data-generating model and associated code-based names."
 tibble::tribble(~`model`, ~`code`, ~`description`,
         "$\\textrm{liking}_{ij}$", "`liking_ij`", "rating of song $i$ for participant $j$ on the interval [0, 100]",
         "$\\textrm{genre}_i$", "`genre_i`", "genre of song $i$ (0='pop', 1='rock')",
@@ -53,11 +53,8 @@ tibble::tribble(~`model`, ~`code`, ~`description`,
         "$T_{0j}$", "`T_0j`", "random intercept for subject $j$",
         "$T_{1j}$", "`T_1j`", "random slope for subject $j$",
         "$O_{0i}$", "`O_0i`", "random intercept for song $i$",
-        "$e_{ij}$", "`e_ij`", "residual of song $i$ for participant $j$") %>%
-  apa_table(align = c("l", "l", "l"),
-            caption = "Variables in the data-generating model and associated code-based names.",
-            escape = FALSE,
-            placement = "H")
+        "$\\epsilon_{ij}$", "`e_ij`", "residual of song $i$ for participant $j$") %>%
+  knitr::kable(align = c("l", "l", "l"))
 ```
 
 ### Step 2: Variable composition
@@ -68,12 +65,12 @@ In many other situations, we might include variables such as age and sex in the 
 
 ### Step 3: Parameter composition
 
-Finally, we need to establish the data-generating parameters in the model. You may draw on your own, or your colleague's, substantive expertise about the phenomenon you're studying to determine what parameter values are plausible. Or, you might look to the literature for studies that examined similar effects. Table 3.2 lists parameter values we will use as a starting point. Later, we will try using some alternative values and compare power for each.
+Finally, we need to establish the data-generating parameters in the model. You may draw on your own, or your colleague's, substantive expertise about the phenomenon you're studying to determine what parameter values are plausible. Or, you might look to the literature for studies that examined similar effects. @tbl-param-all lists parameter values we will use as a starting point. Later, we will try using some alternative values and compare power for each.
 
 ```{r}
-#| label: param-all
+#| label: tbl-param-all
 #| echo: false
-#| results: "asis"
+#| tbl-cap: "Settings for all data-generating parameters."
 tibble::tribble(~`code`, ~`value`, ~`description`,
         "`beta_0`", "60", "intercept; i.e., mean of liking rating for 'pop' genre",
         "`beta_1`", "5", "slope; i.e, mean difference btw 'pop' and 'rock' song ratings",
@@ -82,8 +79,5 @@ tibble::tribble(~`code`, ~`value`, ~`description`,
         "`rho`", "0.2", "correlation between intercept and slope",
         "`omega_0`", "3", "by-song random intercept sd",
         "`sigma`", "8", "residual (error) sd") %>%
-  apa_table(align = c("l", "l", "l"),
-            caption = "Settings for all data-generating parameters.",
-            escape = FALSE,
-            placement = "H")
+  knitr::kable(align = c("l", "l", "l"))
 ```

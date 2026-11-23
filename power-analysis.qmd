@@ -68,6 +68,8 @@ In practice, we will often rely on software to perform the above calculation for
 power.t.test(n=NULL, delta=0.7, sd=1, sig.level=0.05, power=0.8, alternative="two.sided")
 ```
 
+The software's answer, $n = 33.02$ per group, rounds up to 34 rather than 33, because `power.t.test()` uses the $t$ distribution instead of the normal approximation we used above.
+
 ## Step by step
 
 Here are the general set of steps required to implement a power analysis for most study designs:
@@ -86,4 +88,4 @@ To solve for sample size $n$, we need an estimate of effect size ($\delta = \mu_
 
 **4. Calculate the sample size required to obtain the power level desired.**
 
-This can either be done by pugging and chugging values into the relevant formula, or by using a software-based implementation of said formula.
+This can either be done by plugging and chugging values into the relevant formula, or by using a software-based implementation of said formula.

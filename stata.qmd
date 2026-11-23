@@ -11,6 +11,34 @@ library(Statamarkdown)  # registers the stata engine; each chunk runs in Stata M
 knitr::opts_chunk$set(comment = "", collectcode = TRUE)
 ```
 
+::: {.callout-important title="This chapter fits a simpler model than the R and Python chapters"}
+
+The R and Python chapters fit the full crossed design: a by-song random
+intercept, a by-subject random intercept, a by-subject random slope, and
+(in R only) the correlation between the two subject effects. **This chapter
+drops three of those parameters** --- `omega_0`, `tau_1` and `rho` --- and
+fits a random-intercept model, `mixed liking_ij genre_i || subj_id:`.
+
+The reason is runtime, not principle. Stata *can* express the crossed
+design, as `mixed liking_ij genre_i || _all: R.song_id || subj_id: genre_i,
+cov(un)`, but fitting it thousands of times over a grid of parameter values
+takes days rather than minutes, which makes a power simulation of the kind
+this tutorial teaches impractical in Stata.
+
+Two consequences worth being explicit about:
+
+* **The power estimates here are optimistic.** Ignoring by-song variance and
+  the random slope shrinks the standard error of `beta_1`, so power comes
+  out higher than for the design the study actually has.
+* **They are not comparable with the R and Python chapters**, which answer a
+  different (and harder) question.
+
+Read this chapter for the Stata mechanics --- programs, `return`, matrices,
+looping a simulation --- and take the R or Python chapter as the reference
+for the design itself.
+
+:::
+
 ## Setup
 
 We will need several Stata packages to draw a violin plot. We can use “ssc install [package_name]” to install them.
@@ -33,11 +61,11 @@ set seed 02138
 
 ## Data simulation step by step
 
-To give an overview of the power simulation task, we will simulate data from a design with crossed random factors of subjects and songs (see [Power of What?](power-of-what.qmd) for design details), fit a model to the simulated data, recover from the model output the parameter values we put in, calculate power, and finally automate the whole process so that we can calculate power for different effect sizes.
+To give an overview of the power simulation task, we will simulate data from a reduced version of the design with crossed random factors of subjects and songs (see [Power of What?](power-of-what.qmd) for design details), fit a model to the simulated data, recover from the model output the parameter values we put in, calculate power, and finally automate the whole process so that we can calculate power for different effect sizes.
 
 ### Establish the simulation parameters
 
-Before we start, let’s set some global parameters for our power simulations. 
+Before we start, let’s set some global parameters for our power simulations. Since simulations can take a long time to run, we'll use 30 replications here as an example, but we recommend increasing this number to at least 1000 replications for a more accurate final power calculation.
 
 ```{stata}
 // number of simulation replications for power calculation
@@ -51,39 +79,11 @@ Note: these are Stata `global` macros (referenced as `$reps`) rather than `local
 
 ### Establish the data-generating parameters
 
-The first thing to do is to set up the parameters that govern the process we assume gave rise to the data - the *data-generating process*, or DGP. We previously decided upon the data-generating parameters (see [Power of What?](power-of-what.qmd)), so we just need to code them here.
-
-::: {.callout-important title="This chapter fits a simpler model than the R and Python chapters"}
-
-The R and Python chapters fit the full crossed design: a by-song random
-intercept, a by-subject random intercept, a by-subject random slope, and
-the correlation between the two subject effects. **This chapter drops three
-of those parameters** --- `omega_0`, `tau_1` and `rho` --- and fits a
-random-intercept model, `mixed liking_ij genre_i || subj_id:`.
-
-The reason is runtime, not principle. Stata *can* express the crossed
-design, as `mixed liking_ij genre_i || _all: R.song_id || subj_id: genre_i,
-cov(un)`, but fitting it thousands of times over a grid of parameter values
-takes days rather than minutes, which makes a power simulation of the kind
-this tutorial teaches impractical in Stata.
-
-Two consequences worth being explicit about:
-
-* **The power estimates here are optimistic.** Ignoring by-song variance and
-  the random slope shrinks the standard error of `beta_1`, so power comes
-  out higher than for the design the study actually has.
-* **They are not comparable with the R and Python chapters**, which answer a
-  different (and harder) question.
-
-Read this chapter for the Stata mechanics --- programs, `return`, matrices,
-looping a simulation --- and take the R or Python chapter as the reference
-for the design itself.
-
-:::
+The first thing to do is to set up the parameters that govern the process we assume gave rise to the data - the *data-generating process*, or DGP. We previously decided upon the data-generating parameters (see [Power of What?](power-of-what.qmd)), so we just need to code the ones this chapter keeps here.
 
 ```{stata}
 // set all data-generating parameters
-global beta_0 = 60   // intercept; i.e., the grand mean
+global beta_0 = 60   // intercept; i.e., the mean for the pop genre
 global beta_1 = 5    // slope; i.e., effect of category
 global tau_0 = 7     // by-subject random intercept sd
 global sigma = 8     // residual (error) sd
@@ -129,9 +129,9 @@ save songs, replace
 
 #### Simulate the sampling of subjects
 
-Now we simulate the sampling of participants, which results in table listing each individual and their random effect (a random intercept). To do this, we must sample $t_0$ from a normal distribution.
+Now we simulate the sampling of participants, which results in a table listing each individual and their random effect (a random intercept). To do this, we must sample $t_0$ from a normal distribution.
 
-We will use the function `rnormal`, which generates a simulated value from a univariate normal distribution with a mean of 0 and a standard deviations of `tau_0` of each variable.
+We will use the function `rnormal`, which generates a simulated value from a univariate normal distribution with a mean of 0 and a standard deviation of `tau_0`.
 
 ```{stata}
 // simulate a sample of subjects
@@ -178,7 +178,7 @@ list in 1 / 10
 
 #### Calculate response values
 
-With this resulting `trials` table, in combination with the constants `beta_0` and `beta_1`, we have the full set of values that we need to compute the response variable `liking_ij` according the linear model we defined previously (see [Power of What?](power-of-what.qmd)).
+With this resulting `trials` table, in combination with the constants `beta_0` and `beta_1`, we have the full set of values that we need to compute the response variable `liking_ij` according to the linear model we defined previously (see [Power of What?](power-of-what.qmd)).
 
 ```{stata}
 gen liking_ij = $beta_0 + t0 +  $beta_1  * genre_i + e_ij
@@ -200,7 +200,7 @@ local palette "orange dodgerblue"
 
 // Create a violin plot for actual data
 violinplot liking_ij, over(category) colors(`palette') vertical mean(type(line) lp(dash) stat(mean)) title("Predicted versus simulated values")
-graph export "images/stata_violin.png", width(1600) replace
+quietly graph export "images/stata_violin.png", width(1600) replace
 ```
 
 ![](images/stata_violin.png)
@@ -219,7 +219,7 @@ The terms in formula are as follows:
 - `genre_i` is the dummy coded variable identifying whether song $i$ belongs to the pop or rock genre.
 - `|| subj_id` specified a subject-specific random intercept (`t0`)
 
-Now we can estimate the model.
+The estimated coefficients are stored in `e(b)`, which we can copy into a matrix and list.
 
 ```{stata}
 matrix b = e(b)
@@ -269,15 +269,15 @@ end
 
 ## Power calculation single run
 
-We can wrap the data generating function and modeling code in a new function `single_run()` that returns the analysis results for a single simulation run. The `noretable nofetable noheader nogroup` options keep `mixed` from printing a full table for every one of the thousands of fits.
+We can wrap the data generating function and modeling code in a new function `single_run()` that returns the analysis results for a single simulation run. The `quietly` prefix keeps `sim_data` and `mixed` from printing their messages, iteration log, and tables for every one of the thousands of fits.
 
 ```{stata}
 capture program define single_run, rclass
 	args n_subj n_pop n_rock beta_0 beta_1 tau_0 sigma
 
 	clear
-	sim_data `n_subj' `n_pop' `n_rock' `beta_0' `beta_1' `tau_0' `sigma'
-	mixed liking_ij genre_i || subj_id:, noretable nofetable noheader nogroup
+	quietly sim_data `n_subj' `n_pop' `n_rock' `beta_0' `beta_1' `tau_0' `sigma'
+	quietly mixed liking_ij genre_i || subj_id:
 
   estimates clear
 	estimates store model_results
@@ -318,9 +318,9 @@ return list
 
 ## Power calculation automated
 
-To get an accurate estimation of power, we need to run the simulation many times. Here we use a matrix `results` to store the analysis results of each run.
+To get an accurate estimation of power, we need to run the simulation many times. Here we use a matrix `results` to store the analysis results of each run. A Stata matrix can have at most 800 rows in Stata/BE, 11,000 in Stata/SE, and 65,534 in Stata/MP, so that is also the largest number of replications this matrix can hold.
 
-We can finally calculate power for our parameter of interest `beta_1` by filtering to keep only that term and the calculating the proportion of times the $p$-value is below the `alpha` threshold.
+We can finally calculate power for our parameter of interest `beta_1` by filtering to keep only that term and then calculating the proportion of times the $p$-value is below the `alpha` threshold.
 
 ```{stata}
 clear
@@ -434,29 +434,24 @@ return list
 matrix list r(RE)
 ```
 
-Then we just repeatedly call `parameter_search()` for the number of times specified by `reps` and store the result in a matrix `final_results`. Fair warning, this will take some time if you have set a high number of replications!
+Then we just repeatedly call `parameter_search()` for the number of times specified by `reps` and use `postfile` to add each row of results to a dataset `sims_params`, because one matrix holding every row would exceed the matrix row limit in Stata/BE. Fair warning, this will take some time if you have set a high number of replications!
 
 ```{stata}
 // replicate the parameter search many times
-clear
-matrix final_results = J(1, 7, .)
+tempname sims
+postfile `sims' n_subj n_pop n_rock beta_1 mean_estimate mean_se p_value using sims_params, replace
 forval i = 1/$reps {
   parameter_search params
+  matrix RE = r(RE)
 
-	matrix final_results = final_results \ r(RE)
+  // post each row of this replication's results to the dataset
+  forval j = 1/`=rowsof(RE)' {
+    post `sims' (RE[`j', 1]) (RE[`j', 2]) (RE[`j', 3]) (RE[`j', 4]) (RE[`j', 5]) (RE[`j', 6]) (RE[`j', 7])
+  }
 }
+postclose `sims'
 
-// rename the columns
-clear
-svmat final_results, names(final_results)
-rename final_results1 n_subj
-rename final_results2 n_pop
-rename final_results3 n_rock
-rename final_results4 beta_1
-rename final_results5 mean_estimate
-rename final_results6 mean_se
-rename final_results7 p_value
-drop in 1
+use sims_params, clear
 ```
 
 Now, as before, we can calculate power. But this time we'll group by all of the parameters we manipulated in `params`, so that we can get power estimates for all combinations of parameter values.
@@ -477,7 +472,7 @@ Here's a graph that visualizes the output of the power simulation.
 
 ```{stata}
 twoway (connected power beta_1 if n_subj == 10, sort) (connected power beta_1 if n_subj == 25, sort) (connected power beta_1 if n_subj == 50, sort), scheme(s2color) by(n_pop n_rock) legend(lab(1 "sample_size = 10") lab(2 "sample_size = 25") lab(3 "sample_size = 50"))
-graph export "images/stata_final.png", width(1600) replace
+quietly graph export "images/stata_final.png", width(1600) replace
 ```
 
 ![](images/stata_final.png)
