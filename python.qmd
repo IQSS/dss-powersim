@@ -21,7 +21,7 @@ This chapter follows the same structure as the R chapter, and much of the prose 
 
 ::: {.callout-note title="Two differences from the R chapter"}
 
-1. R uses `p_load()` to install any missing libraries and load them in one step. In Python the environment is configured separately --- here by `uv sync` from the materials folder --- so the imports below assume the packages are already installed.
+1. R uses `p_load()` to install any missing libraries and load them in one step. In Python the environment is configured separately --- here by `uv sync` in a clone of the [guide's repository](https://github.com/IQSS/dss-powersim) --- so the imports below assume the packages are already installed.
 2. The R chapter sets up parallelism once in its setup section; this chapter uses `dask` at the point where the simulations are run.
 
 :::
@@ -48,11 +48,11 @@ np.random.seed(2138)
 
 ## Data simulation step by step
 
-To give an overview of the power simulation task, we will simulate data from a design with crossed random factors of subjects and songs (see Power of What? for design details), fit a model to the simulated data, recover from the model output the parameter values we put in, calculate power, and finally automate the whole process so that we can calculate power for different effect sizes. Much of the general workflow here is borrowed from DeBruine & Barr (2021) Understanding Mixed-Effects Models through Simulation. We’ll start by writing code that simulates datasets under the alternative hypothesis.
+To give an overview of the power simulation task, we will simulate data from a design with crossed random factors of subjects and songs (see [Power of What?](power-of-what.qmd) for design details), fit a model to the simulated data, recover from the model output the parameter values we put in, calculate power, and finally automate the whole process so that we can calculate power for different effect sizes. Much of the general workflow here is borrowed from [DeBruine & Barr (2021) Understanding Mixed-Effects Models Through Data Simulation](https://journals.sagepub.com/doi/full/10.1177/2515245920965119). We’ll start by writing code that simulates datasets under the alternative hypothesis.
 
 ::: {.callout-note title="Two differences from the R chapter"}
 
-1. The mixed model is fitted with `statsmodels`, which does not report the correlation between a subject's random intercept and random slope, so `rho` cannot be recovered from the fit as it can in R.
+1. The mixed model is fitted with `statsmodels`, which treats the variance components as independent, so this fit has no correlation between a subject's random intercept and random slope. It is not the model fitted in R, and `rho` cannot be recovered from it.
 2. There is no equivalent of `broom.mixed::tidy()`, so the results are pulled out of the summary table by hand rather than arriving as a tidy data frame.
 
 :::
@@ -71,11 +71,11 @@ alpha = 0.05
 
 ### Establish the data-generating parameters
 
-The first thing to do is to set up the parameters that govern the process we assume gave rise to the data - the data-generating process, or DGP. We previously decided upon the data-generating parameters (see Power of What?), so we just need to code them here.
+The first thing to do is to set up the parameters that govern the process we assume gave rise to the data - the data-generating process, or DGP. We previously decided upon the data-generating parameters (see [Power of What?](power-of-what.qmd)), so we just need to code them here.
 
 ```{python}
 # set all data-generating parameters
-beta_0 = 60  # intercept; i.e., the grand mean
+beta_0 = 60  # intercept; i.e., the mean for the pop genre
 beta_1 = 5   # slope; i.e, effect of category
 omega_0 = 3  # by-song random intercept sd
 tau_0 = 7    # by-subject random intercept sd
@@ -111,7 +111,7 @@ print(songs.head(10))
 ```
 
 #### Simulate the sampling of subjects
-Now we simulate the sampling of participants, which results in table listing each individual and their two correlated random effects (a random intercept and random slope). To do this, we must sample $T_{0j} ,T_{1j}$ pairs - one for each subject - from a bivariate normal distribution.
+Now we simulate the sampling of participants, which results in a table listing each individual and their two correlated random effects (a random intercept and random slope). To do this, we must sample $T_{0j} ,T_{1j}$ pairs - one for each subject - from a bivariate normal distribution.
 
 We will use the function np.random.multivariate_normal(), which generates a table of n simulated values from a multivariate normal distribution by specifying the means and covariance matrix(cov).
 
@@ -158,7 +158,7 @@ print(trials.head(10))
 
 #### Calculate response values
 
-With this resulting trials table, in combination with the constants $\beta_0$ and $\beta_1$, we have the full set of values that we need to compute the response variable liking_ij according the linear model we defined previously (see Power of What?).
+With this resulting trials table, in combination with the constants $\beta_0$ and $\beta_1$, we have the full set of values that we need to compute the response variable liking_ij according to the linear model we defined previously (see [Power of What?](power-of-what.qmd)).
 
 ```{python}
 dat_sim = trials.copy()
@@ -193,17 +193,18 @@ plt.show()
 Now we can analyze our simulated data in a linear mixed effects model using the function mixedlm from the {statsmodels} package. The formula and vc_formula in mixedlm() map onto how we calculated our liking_ij outcome variable above.
 
 The terms in formula are as follows:
-liking_ij is the response.
-1 is the intercept ($\beta_0$), which is the mean of the response for the pop genre of songs (because we used dummy coding for the genre_i term).
-genre_i is the dummy coded variable identifying whether song $i$ belongs to the pop or rock genre.
+
+- liking_ij is the response.
+- 1 is the intercept ($\beta_0$), which is the mean of the response for the pop genre of songs (because we used dummy coding for the genre_i term).
+- genre_i is the dummy coded variable identifying whether song $i$ belongs to the pop or rock genre.
 
 The terms in vc_formula are as follows:
 
-0 + C(song_id)  specifies a song-specific random intercept O_0i.
-0 + C(subject_id) specifies a subject-specific random intercept T_0j.
-0 + C(subject_id):genre_i specifies the subject specific random slope of the genre category T_1j.
+- 0 + C(song_id)  specifies a song-specific random intercept O_0i.
+- 0 + C(subj_id) specifies a subject-specific random intercept T_0j.
+- 0 + C(subj_id):genre_i specifies the subject specific random slope of the genre category T_1j.
 
-However, due to the inability of the function mixedlm(), the module did not indicate the correlation between subject-specific random intercept and the subject specific random slope of the genre category.
+However, mixedlm() treats these variance components as independent, so this model has no correlation between the subject-specific random intercept and the subject specific random slope of the genre category. It is not the model fitted in the R chapter, and rho is not estimated.
 
 ```{python}
 # fit a linear mixed-effects model to data
@@ -221,15 +222,20 @@ mod_sim = model.fit()
 print(mod_sim.summary())
 ```
 
+The fit reports the variance components and the residual scale as variances, so we take their square roots to compare them with the standard deviations we simulated from.
+
 ```{python}
+# variance components by name
+vc = dict(zip(model.exog_vc.names, mod_sim.vcomp))
+
 formatted_sim_result = pd.DataFrame({
-    'term': ['Intercept', 'genre_i', '', '', '', '', ''],
+    'term': ['Intercept', 'genre_i', 'sqrt(song_id Var)', 'sqrt(subj_id Var)', '', 'sqrt(genre_i Var)', 'sqrt(Scale)'],
     'parameter': ['beta_0', 'beta_1', 'omega_0', 'tau_0', 'rho', 'tau_1', 'sigma'],
     'value': [beta_0, beta_1, omega_0, tau_0, rho, tau_1, sigma],
     'simulated': [mod_sim.fe_params.iloc[0], mod_sim.fe_params.iloc[1],
-                  '', '',
-                 '', '',
-                 '']
+                  np.sqrt(vc['song_id']), np.sqrt(vc['subj_id']),
+                 '', np.sqrt(vc['genre_i']),
+                 np.sqrt(mod_sim.scale)]
 })
 
 formatted_sim_result
@@ -293,7 +299,7 @@ single_run(n_pop = 10, n_rock = 50, beta_1 = 2)
 
 To get an accurate estimation of power, we need to run the simulation many times. Here we use the package dask to parallelize existing code to speed-up iterative processes.
 
-We use dask.delayed function to decorate single_run() so that it operates lazily, then call the delayed version repeatedly using for statement, and finally call dask.compute function to get the result of simulations.
+We use dask.delayed function to decorate single_run() so that it operates lazily, then call the delayed version repeatedly using for statement, and finally call dask.compute function to get the result of simulations. The dask workers are separate processes that do not inherit the seed we set at the top, so each replication is given its own seed, drawn in the main process, and each worker runs one task at a time (threads_per_worker=1) so that two replications never share a random number generator.
 
 ::: {.callout-note title="Two differences from the R chapter"}
 
@@ -303,15 +309,16 @@ We use dask.delayed function to decorate single_run() so that it operates lazily
 :::
 
 ```{python}
-client = Client()
+client = Client(threads_per_worker=1)
 
 @dask.delayed
-def delayed_single_run(n_subj=25, n_pop=15, n_rock=15, beta_0=60, beta_1=5, omega_0=3, tau_0=7, tau_1=4, rho=0.2, sigma=8):
+def delayed_single_run(seed, n_subj=25, n_pop=15, n_rock=15, beta_0=60, beta_1=5, omega_0=3, tau_0=7, tau_1=4, rho=0.2, sigma=8):
+    np.random.seed(seed)  # seed this replication inside the worker
     df = single_run(n_subj, n_pop, n_rock, beta_0, beta_1, omega_0, tau_0, tau_1, rho, sigma)
     df = df.assign(n_subj=n_subj, n_pop=n_pop, n_rock=n_rock, beta_1=beta_1)
     return df
 
-sims = [delayed_single_run() for _ in range(reps)]
+sims = [delayed_single_run(np.random.randint(2**31)) for _ in range(reps)]
 sims_result = dask.compute(*sims)
 
 sims_df = pd.concat(sims_result).reset_index().rename(columns={'index':'term'})
@@ -334,7 +341,7 @@ print(f"Power: {power}")
 We can do a sanity check to see if our simulation is performing as expected by checking the false positive rate (Type I error rate). We set the effect of genre_i (beta_1) to 0 to calculate the false positive rate, which is the probability of concluding there is an effect when there is no actual effect in the population.
 
 ```{python}
-sims_fp = [delayed_single_run(beta_1=0) for _ in range(reps)]
+sims_fp = [delayed_single_run(np.random.randint(2**31), beta_1=0) for _ in range(reps)]
 sims_fp_result = dask.compute(*sims_fp)
 
 sims_fp_df = pd.concat(sims_fp_result).reset_index().rename(columns={'index':'term'})
@@ -350,11 +357,12 @@ Ideally, the false positive rate will be equal to alpha, which we set at 0.05.
 
 In real life, we will not know the effect size of our quantity of interest and so we will need to repeatedly perform the power analysis over a range of different plausible effect sizes. Perhaps we might also want to calculate power as we vary other data-generating parameters, such as the number of pop and rock songs sampled and the number of subjects sampled. We can create a table that combines all combinations of the parameters we want to vary in a grid.
 
-Note: There are two differences between Python and the R:
+::: {.callout-note title="Two differences from the R chapter"}
 
-1. Python uses the “product” function to permutate and combine parameters, and then use “loop” and “dask.compute” to perform parallel computing;
+1. R builds the grid with `crossing()`; here `product()` builds every combination of the parameter values, and a `for` loop with `dask.compute()` runs them in parallel.
+2. R repeats `parameter_search()` with `future_replicate()`; here two nested `for` loops run every combination of parameter values `reps` times.
 
-2. Python couldn’t repeatedly use parameter_search() and instead uses two layers of loop to realize multiple simulations of each permutation and combination of parameters.
+:::
 
 ```{python}
  # grid of parameter values of interest
@@ -377,6 +385,7 @@ def parameter_search(params):
     # iterate over the grid of parameter values
     for _, row in pgrid.iterrows():
         sims.append(delayed_single_run(
+            seed=np.random.randint(2**31), # a new seed for each run
             n_subj=row['n_subj'], # plug each row of parameter values into single_run()
             n_pop=row['n_pop'],
             n_rock=row['n_rock'],
@@ -400,6 +409,7 @@ pgrid = pd.DataFrame(list(product(*params.values())), columns=params.keys())
 for _ in range(reps):
     for _, row in pgrid.iterrows():
         sims_params.append(delayed_single_run(
+            seed=np.random.randint(2**31),
             n_subj=row['n_subj'],
             n_pop=row['n_pop'],
             n_rock=row['n_rock'],
@@ -440,11 +450,11 @@ fig, axes = plt.subplots(len(sims_table['n_pop'].unique()), len(sims_table['n_ro
 axes = axes.flatten()
 
 # plot
-for i, (pop, rock) in enumerate(sims_table.groupby(['n_pop', 'n_rock'])):
+for i, ((pop, rock), panel) in enumerate(sims_table.groupby(['n_pop', 'n_rock'])):
     ax = axes[i]
-    sns.lineplot(data=rock, x='mean_estimate', y='power', hue='n_subj', style='n_subj', markers=True, ax=ax)
+    sns.lineplot(data=panel, x='mean_estimate', y='power', hue='n_subj', style='n_subj', markers=True, ax=ax)
     ax.axhline(y=0.8, linestyle='dashed', linewidth=0.5)
-    # ax.set_title(f'{pop} x {rock}')
+    ax.set_title(f'{pop} x {rock}')
     ax.set_xlabel('Effect size (rock genre - pop genre)')
     ax.set_ylabel('Power')
     ax.set_ylim(0, 1)

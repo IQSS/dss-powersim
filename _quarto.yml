@@ -1,6 +1,6 @@
 # Simulation-Based Power Analysis (dss-powersim): a Quarto website on the dss-theme extension (quarto add IQSS/dss-theme).
-# Pages named after the 2023 bookdown pages, so every old address still answers (the empty Software Comparison
-# page is not carried). Three engines: the R and Stata pages run under knitr (Statamarkdown registers the stata
+# Pages named after the 2023 bookdown pages, so every old address still answers.
+# Three engines: the R and Stata pages run under knitr (Statamarkdown registers the stata
 # engine and runs Stata MP in batch), the Python page under Jupyter on the repository's uv venv (_environment).
 # Every executed chunk is frozen; CI renders from _freeze/ with no R, Python, or Stata.
 project:

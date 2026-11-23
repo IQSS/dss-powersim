@@ -11,18 +11,18 @@ date: "last-modified"
 
 This tutorial is designed to be a quick-start guide for conducting simulation-based power analyses in R, Python, and Stata. We focus particularly on power for mixed effects models, but the principles employed can be repurposed for any model and study design. The tutorial is suitable for anyone with an intermediate understanding of mixed effects models and coding in either R, Python, or Stata.
 
-While high-level packages exist in some of these languages for conducting simulation-based power analysis (e.g., the R packages [`{simr}`](https://cran.r-project.org/web/packages/simr/vignettes/fromscratch.html), [`{longpower}`](https://cran.r-project.org/web/packages/longpower/vignettes/longpower.html), and [`{simglm}`](https://cran.r-project.org/web/packages/simglm/vignettes/tidy_simulation.html)), such packages abstract away the details of conducting simulations and thus are best used after gaining an understanding of the power simulation process. In addition, rolling your own simulations from scratch provides much more flexibility to tackle different study designs and models - and it's fun!
+While high-level packages exist in some of these languages for conducting simulation-based power analysis (e.g., the R packages [`{simr}`](https://cran.r-project.org/web/packages/simr/vignettes/fromscratch.html) and [`{simglm}`](https://cran.r-project.org/web/packages/simglm/vignettes/tidy_simulation.html)), such packages abstract away the details of conducting simulations and thus are best used after gaining an understanding of the power simulation process. In addition, rolling your own simulations from scratch provides much more flexibility to tackle different study designs and models - and it's fun!
 
 Suggestions and feedback are welcome: use the Request help button at the top of the page.
 
 ### Table of Contents
 
-1. [Canned Power Analysis](power-analysis.qmd)
-2. [Simulation-based Power Analysis](simulation.qmd)
+1. [Power Analysis](power-analysis.qmd)
+2. [Simulation](simulation.qmd)
 3. [Power of What?](power-of-what.qmd)
-4. [R Examples](r.qmd)
-5. [Python Examples](python.qmd)
-6. [Stata Examples](stata.qmd)
+4. [R](r.qmd)
+5. [Python](python.qmd)
+6. [Stata](stata.qmd)
 7. [Resources](resources.qmd)
 
 ### Contributors
