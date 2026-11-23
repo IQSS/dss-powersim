@@ -81,9 +81,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-10a8614d5edbcfb62f4247fcc5f226a6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-ba686918b879777e5912dbe1a545fe5e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-10a8614d5edbcfb62f4247fcc5f226a6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-08ee8a756545d45ae79d04a038e7d566.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-58eb8971e32fb2b5faf6ff551ffe7aef.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-08ee8a756545d45ae79d04a038e7d566.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -567,6 +567,7 @@ n_g \approx 2(1.960 + 0.8416)^2 \left( \frac{1}{0.7} \right)^2 = 32.036
 NOTE: n is number in *each* group</code></pre>
 </div>
 </div>
+<p>The software’s answer, <span class="math inline">\(n = 33.02\)</span> per group, rounds up to 34 rather than 33, because <code>power.t.test()</code> uses the <span class="math inline">\(t\)</span> distribution instead of the normal approximation we used above.</p>
 </section>
 <section id="step-by-step" class="level2">
 <h2 class="anchored" data-anchor-id="step-by-step">Step by step</h2>
@@ -578,7 +579,7 @@ NOTE: n is number in *each* group</code></pre>
 <p><strong>3. Specify the estimated effect size level for the test.</strong></p>
 <p>To solve for sample size <span class="math inline">\(n\)</span>, we need an estimate of effect size (<span class="math inline">\(\delta = \mu_1 - \mu_2\)</span>) that has scientific meaning. Sometimes we need to use a pilot dataset or look to previous studies to get this value.</p>
 <p><strong>4. Calculate the sample size required to obtain the power level desired.</strong></p>
-<p>This can either be done by pugging and chugging values into the relevant formula, or by using a software-based implementation of said formula.</p>
+<p>This can either be done by plugging and chugging values into the relevant formula, or by using a software-based implementation of said formula.</p>
 
 
 </section>

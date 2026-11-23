@@ -81,9 +81,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-10a8614d5edbcfb62f4247fcc5f226a6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="site_libs/bootstrap/bootstrap-dark-ba686918b879777e5912dbe1a545fe5e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="site_libs/bootstrap/bootstrap-10a8614d5edbcfb62f4247fcc5f226a6.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-08ee8a756545d45ae79d04a038e7d566.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-dark-58eb8971e32fb2b5faf6ff551ffe7aef.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="site_libs/bootstrap/bootstrap-08ee8a756545d45ae79d04a038e7d566.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -527,7 +527,7 @@ window.Quarto = {
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  furrr,        <span class="co"># fast functional programming</span></span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>  faux,         <span class="co"># simulate from multivariate normal distribution</span></span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>  broom.mixed,  <span class="co"># extracting tidy data from model fits</span></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  tidyverse,    <span class="co"># data wrangling and visualisation</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  tidyverse,    <span class="co"># data wrangling and visualization</span></span>
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  gt            <span class="co"># nice tables</span></span>
 <span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  )</span>
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
@@ -544,10 +544,10 @@ window.Quarto = {
 </section>
 <section id="data-simulation-step-by-step" class="level2">
 <h2 class="anchored" data-anchor-id="data-simulation-step-by-step">Data simulation step by step</h2>
-<p>To give an overview of the power simulation task, we will simulate data from a design with crossed random factors of subjects and songs (see <a href="./power-of-what.html">Power of What?</a> for design details), fit a model to the simulated data, recover from the model output the parameter values we put in, calculate power, and finally automate the whole process so that we can calculate power for different effect sizes. Much of the general workflow here is borrowed from <a href="https://journals.sagepub.com/doi/full/10.1177/2515245920965119">DeBruine &amp; Barr (2021) Understanding Mixed-Effects Models through Simulation</a>. We’ll start by writing code that simulates datasets under the alternative hypothesis.</p>
+<p>To give an overview of the power simulation task, we will simulate data from a design with crossed random factors of subjects and songs (see <a href="./power-of-what.html">Power of What?</a> for design details), fit a model to the simulated data, recover from the model output the parameter values we put in, calculate power, and finally automate the whole process so that we can calculate power for different effect sizes. Much of the general workflow here is borrowed from <a href="https://journals.sagepub.com/doi/full/10.1177/2515245920965119">DeBruine &amp; Barr (2021) Understanding Mixed-Effects Models Through Data Simulation</a>. We’ll start by writing code that simulates datasets under the alternative hypothesis.</p>
 <section id="establish-the-simulation-parameters" class="level3">
 <h3 class="anchored" data-anchor-id="establish-the-simulation-parameters">Establish the simulation parameters</h3>
-<p>Before we start, let’s set some global parameters for our power simulations. Since simulations can take a long time to run, we’ll use 100 replications here as an example, but we recommend increasing this number to at least 1000 replications for a more accurate final power calculation.</p>
+<p>Before we start, let’s set some global parameters for our power simulations. Since simulations can take a long time to run, we’ll use 100 replications here as an example, but we recommend increasing this number to at least 1000 replications for a more accurate final power calculation. To keep their run times short, the Python and Stata chapters use 30 replications, and the Python chapter also uses a smaller grid of parameter values.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># number of simulation replicates for power calculation</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>reps <span class="ot">&lt;-</span> <span class="dv">100</span></span>
@@ -561,7 +561,7 @@ window.Quarto = {
 <p>The first thing to do is to set up the parameters that govern the process we assume gave rise to the data - the <em>data-generating process</em>, or DGP. We previously decided upon the data-generating parameters (see <a href="./power-of-what.html">Power of What?</a>), so we just need to code them here.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># set all data-generating parameters</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>beta_0  <span class="ot">&lt;-</span>  <span class="dv">60</span>   <span class="co"># intercept; i.e., the grand mean</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>beta_0  <span class="ot">&lt;-</span>  <span class="dv">60</span>   <span class="co"># intercept; i.e., the mean for the pop genre</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>beta_1  <span class="ot">&lt;-</span>   <span class="dv">5</span>   <span class="co"># slope; i.e, effect of category</span></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>omega_0 <span class="ot">&lt;-</span>   <span class="dv">3</span>   <span class="co"># by-song random intercept sd</span></span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>tau_0   <span class="ot">&lt;-</span>   <span class="dv">7</span>   <span class="co"># by-subject random intercept sd</span></span>
@@ -612,7 +612,7 @@ window.Quarto = {
 </section>
 <section id="simulate-the-sampling-of-subjects" class="level4">
 <h4 class="anchored" data-anchor-id="simulate-the-sampling-of-subjects">Simulate the sampling of subjects</h4>
-<p>Now we simulate the sampling of participants, which results in table listing each individual and their two correlated random effects (a random intercept and random slope). To do this, we must sample <span class="math inline">\({T_{0j}, T_{1j}}\)</span> pairs - one for each subject - from a bivariate normal distribution.</p>
+<p>Now we simulate the sampling of participants, which results in a table listing each individual and their two correlated random effects (a random intercept and random slope). To do this, we must sample <span class="math inline">\({T_{0j}, T_{1j}}\)</span> pairs - one for each subject - from a bivariate normal distribution.</p>
 <p>We will use the function <code>faux::rnorm_multi()</code>, which generates a table of <code>n</code> simulated values from a multivariate normal distribution by specifying the means (<code>mu</code>) and standard deviations (<code>sd</code>) of each variable, plus the correlations (<code>r</code>), which can be either a single value (applied to all pairs), a correlation matrix, or a vector of the values in the upper right triangle of the correlation matrix.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># simulate a sample of subjects</span></span>
@@ -701,7 +701,7 @@ window.Quarto = {
 </section>
 <section id="calculate-response-values" class="level4">
 <h4 class="anchored" data-anchor-id="calculate-response-values">Calculate response values</h4>
-<p>With this resulting <code>trials</code> table, in combination with the constants <code>beta_0</code> and <code>beta_1</code>, we have the full set of values that we need to compute the response variable <code>liking_ij</code> according the linear model we defined previously (see <a href="./power-of-what.html">Power of What?</a>).</p>
+<p>With this resulting <code>trials</code> table, in combination with the constants <code>beta_0</code> and <code>beta_1</code>, we have the full set of values that we need to compute the response variable <code>liking_ij</code> according to the linear model we defined previously (see <a href="./power-of-what.html">Power of What?</a>).</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>dat_sim <span class="ot">&lt;-</span> trials <span class="sc">|&gt;</span></span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">liking_ij =</span> beta_0 <span class="sc">+</span> T_0j <span class="sc">+</span> O_0i <span class="sc">+</span> (beta_1 <span class="sc">+</span> T_1j) <span class="sc">*</span> genre_i <span class="sc">+</span> e_ij) <span class="sc">|&gt;</span></span>
@@ -801,17 +801,26 @@ genre_i        7.501      1.713 40.857   4.379 8.09e-05 ***
 Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 </div>
 </div>
-<p>We can use the <code>broom.mixed::tidy()</code> function to get a tidy table of the results. This will prove to be super useful later when we need to combine the output from hundreds of simulations to calculate power. We will add columns for <code>parameter</code> and <code>value</code>, so we can compare the estimate from the model to the parameters we used to simulate the data.</p>
+<p>We can use the <code>broom.mixed::tidy()</code> function to get a tidy table of the results. This will prove to be super useful later when we need to combine the output from hundreds of simulations to calculate power. We will add columns for <code>parameter</code> and <code>value</code>, matched to the model output by <code>group</code> and <code>term</code>, so we can compare the estimate from the model to the parameters we used to simulate the data.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># get a tidy table of results</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>broom.mixed<span class="sc">::</span><span class="fu">tidy</span>(mod_sim) <span class="sc">|&gt;</span></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.numeric), \(x) <span class="fu">round</span>(x, <span class="dv">3</span>))) <span class="sc">|&gt;</span></span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">parameter =</span> <span class="fu">c</span>(<span class="st">"beta_0"</span>, <span class="st">"beta_1"</span>, <span class="st">"omega_0"</span>, <span class="st">"tau_0"</span>, <span class="st">"rho"</span>, <span class="st">"tau_1"</span>, <span class="st">"sigma"</span>),</span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">value =</span> <span class="fu">c</span>(beta_0, beta_1, omega_0, tau_0, rho, tau_1, sigma),</span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
-<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(term, parameter, value, estimate) <span class="sc">|&gt;</span></span>
-<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># the parameter that each row of the model output estimates</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>param_labels <span class="ot">&lt;-</span> <span class="fu">tribble</span>(</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>group,     <span class="sc">~</span>term,                      <span class="sc">~</span>parameter, <span class="sc">~</span>value,</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  <span class="cn">NA</span>,         <span class="st">"(Intercept)"</span>,              <span class="st">"beta_0"</span>,   beta_0,</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  <span class="cn">NA</span>,         <span class="st">"genre_i"</span>,                  <span class="st">"beta_1"</span>,   beta_1,</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"song_id"</span>,  <span class="st">"sd__(Intercept)"</span>,          <span class="st">"omega_0"</span>,  omega_0,</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"subj_id"</span>,  <span class="st">"sd__(Intercept)"</span>,          <span class="st">"tau_0"</span>,    tau_0,</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  <span class="st">"subj_id"</span>,  <span class="st">"sd__genre_i"</span>,              <span class="st">"tau_1"</span>,    tau_1,</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">"subj_id"</span>,  <span class="st">"cor__(Intercept).genre_i"</span>, <span class="st">"rho"</span>,      rho,</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">"Residual"</span>, <span class="st">"sd__Observation"</span>,          <span class="st">"sigma"</span>,    sigma</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a><span class="co"># get a tidy table of results</span></span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>broom.mixed<span class="sc">::</span><span class="fu">tidy</span>(mod_sim) <span class="sc">|&gt;</span></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.numeric), \(x) <span class="fu">round</span>(x, <span class="dv">3</span>))) <span class="sc">|&gt;</span></span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(param_labels, <span class="at">by =</span> <span class="fu">c</span>(<span class="st">"group"</span>, <span class="st">"term"</span>)) <span class="sc">|&gt;</span> <span class="co"># match by name, not by row position</span></span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(term, parameter, value, estimate) <span class="sc">|&gt;</span></span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>  knitr<span class="sc">::</span><span class="fu">kable</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <thead>
@@ -849,14 +858,14 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">sd__genre_i</td>
-<td style="text-align: left;">rho</td>
-<td style="text-align: right;">0.2</td>
+<td style="text-align: left;">tau_1</td>
+<td style="text-align: right;">4.0</td>
 <td style="text-align: right;">4.793</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">cor__(Intercept).genre_i</td>
-<td style="text-align: left;">tau_1</td>
-<td style="text-align: right;">4.0</td>
+<td style="text-align: left;">rho</td>
+<td style="text-align: right;">0.2</td>
 <td style="text-align: right;">0.451</td>
 </tr>
 <tr class="odd">
@@ -1021,7 +1030,7 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">beta_1 =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span> </span>
 <span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>We can now wrap our <code>single_run()</code> function within a more general function <code>parameter_search()</code> that takes the grid of parameter values as input and uses the <code>future_pmap_dfr()</code> function to iterate over each row of parameter values in <code>pgrid</code> and feed them into <code>single_run()</code>.</p>
+<p>We can now wrap our <code>single_run()</code> function within a more general function <code>parameter_search()</code> that takes the grid of parameter values as input and uses the <code>future_pmap_dfr()</code> function to iterate over each row of parameter values in <code>pgrid</code> and feed them into <code>single_run()</code>. Each set of results keeps the parameter values that produced it.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># fit the models over the parameters</span></span>
 <span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>parameter_search <span class="ot">&lt;-</span> <span class="cf">function</span>(<span class="at">params =</span> pgrid){</span>
@@ -1029,51 +1038,47 @@ Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">.l =</span> params, <span class="co"># iterate over the grid of parameter values</span></span>
 <span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">.f =</span> <span class="sc">~</span> <span class="fu">single_run</span>(</span>
 <span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>             <span class="at">n_subj =</span> ..<span class="dv">1</span>, <span class="co"># plug each row of parameter values into single_run()</span></span>
-<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>             <span class="at">n_pop  =</span> ..<span class="dv">2</span>, </span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>             <span class="at">n_pop  =</span> ..<span class="dv">2</span>,</span>
 <span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>             <span class="at">n_rock =</span> ..<span class="dv">3</span>,</span>
 <span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>             <span class="at">beta_1 =</span> ..<span class="dv">4</span></span>
-<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>             ),</span>
-<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">.options =</span> <span class="fu">furrr_options</span>(<span class="at">seed =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">.progress =</span> <span class="cn">TRUE</span></span>
-<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>             ) <span class="sc">|&gt;</span></span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>           <span class="co"># keep the parameter values alongside the results they produced</span></span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>           <span class="fu">mutate</span>(<span class="at">n_subj =</span> ..<span class="dv">1</span>, <span class="at">n_pop =</span> ..<span class="dv">2</span>, <span class="at">n_rock =</span> ..<span class="dv">3</span>, <span class="at">beta_1 =</span> ..<span class="dv">4</span>, <span class="at">.before =</span> <span class="dv">1</span>),</span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">.options =</span> <span class="fu">furrr_options</span>(<span class="at">seed =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb34-15"><a href="#cb34-15" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>If we call <code>parameter_search()</code> it will return a single replication of simulations for each combination of parameter values in <code>pgrid</code>.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">parameter_search</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
-<pre><code># A tibble: 420 × 8
-   effect   group    term           estimate std.error statistic    df   p.value
-   &lt;chr&gt;    &lt;chr&gt;    &lt;chr&gt;             &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;
- 1 fixed    &lt;NA&gt;     (Intercept)     60.3         2.43   24.8     16.5  1.63e-14
- 2 fixed    &lt;NA&gt;     genre_i          1.01        2.48    0.408   19.1  6.87e- 1
- 3 ran_pars song_id  sd__(Intercep…   4.40       NA      NA       NA   NA       
- 4 ran_pars subj_id  sd__(Intercep…   5.85       NA      NA       NA   NA       
- 5 ran_pars subj_id  sd__genre_i      3.38       NA      NA       NA   NA       
- 6 ran_pars subj_id  cor__(Interce…   0.732      NA      NA       NA   NA       
- 7 ran_pars Residual sd__Observati…   7.56       NA      NA       NA   NA       
- 8 fixed    &lt;NA&gt;     (Intercept)     59.8         2.28   26.2     10.7  4.50e-11
- 9 fixed    &lt;NA&gt;     genre_i          0.0687      2.20    0.0313  12.3  9.76e- 1
-10 ran_pars song_id  sd__(Intercep…   2.25       NA      NA       NA   NA       
-# ℹ 410 more rows</code></pre>
+<pre><code># A tibble: 420 × 12
+   n_subj n_pop n_rock beta_1 effect   group  term  estimate std.error statistic
+    &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;  &lt;int&gt; &lt;chr&gt;    &lt;chr&gt;  &lt;chr&gt;    &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+ 1     10    10     10      1 fixed    &lt;NA&gt;   (Int…  60.3         2.43   24.8   
+ 2     10    10     10      1 fixed    &lt;NA&gt;   genr…   1.01        2.48    0.408 
+ 3     10    10     10      1 ran_pars song_… sd__…   4.40       NA      NA     
+ 4     10    10     10      1 ran_pars subj_… sd__…   5.85       NA      NA     
+ 5     10    10     10      1 ran_pars subj_… sd__…   3.38       NA      NA     
+ 6     10    10     10      1 ran_pars subj_… cor_…   0.732      NA      NA     
+ 7     10    10     10      1 ran_pars Resid… sd__…   7.56       NA      NA     
+ 8     10    10     10      2 fixed    &lt;NA&gt;   (Int…  59.8         2.28   26.2   
+ 9     10    10     10      2 fixed    &lt;NA&gt;   genr…   0.0687      2.20    0.0313
+10     10    10     10      2 ran_pars song_… sd__…   2.25       NA      NA     
+# ℹ 410 more rows
+# ℹ 2 more variables: df &lt;dbl&gt;, p.value &lt;dbl&gt;</code></pre>
 </div>
 </div>
 <p>To run multiple replications of <code>parameter_search()</code>, we can use the <code>future_replicate()</code> function, which just repeatedly calls <code>parameter_search()</code> for the number of times specified by <code>reps</code>. Fair warning, this will take some time if you have set a high number of replications!</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># replicate the parameter grid to match the dimensions of the model outputs</span></span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>pgrid_expand <span class="ot">&lt;-</span> pgrid <span class="sc">|&gt;</span> </span>
-<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice</span>(<span class="fu">rep</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">n</span>(), <span class="at">each =</span> <span class="dv">7</span>)) <span class="sc">|&gt;</span> <span class="co"># replicate each row by 7 parameters</span></span>
-<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">map_df</span>(rep.int, <span class="at">times =</span> reps) <span class="co"># replicate the whole grid by number of reps</span></span>
-<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a><span class="co"># replicate the parameter search many times</span></span>
-<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>sims_params <span class="ot">&lt;-</span> <span class="fu">future_replicate</span>(</span>
-<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">n =</span> reps, </span>
-<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">expr =</span> <span class="fu">parameter_search</span>(), </span>
-<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">simplify =</span> <span class="cn">FALSE</span></span>
-<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">|&gt;</span></span>
-<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">imap</span>( <span class="sc">~</span> <span class="fu">mutate</span>(.x, <span class="at">rep =</span> .y, <span class="at">.before =</span> <span class="st">"effect"</span>)) <span class="sc">|&gt;</span> <span class="co"># include rep ID</span></span>
-<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>() <span class="sc">|&gt;</span> <span class="co"># combine into a single tibble</span></span>
-<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(pgrid_expand, <span class="at">.before =</span> <span class="st">"effect"</span>) <span class="co"># add in the parameter grid values</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># replicate the parameter search many times</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>sims_params <span class="ot">&lt;-</span> <span class="fu">future_replicate</span>(</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">n =</span> reps,</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">expr =</span> <span class="fu">parameter_search</span>(),</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">simplify =</span> <span class="cn">FALSE</span></span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">|&gt;</span></span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">imap</span>( <span class="sc">~</span> <span class="fu">mutate</span>(.x, <span class="at">rep =</span> .y, <span class="at">.before =</span> <span class="st">"effect"</span>)) <span class="sc">|&gt;</span> <span class="co"># include rep ID</span></span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>() <span class="co"># combine into a single tibble</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Now, as before, we can calculate power. But this time we’ll group by all of the parameters we manipulated in <code>pgrid</code>, so that we can get power estimates for all combinations of parameter values.</p>
 <div class="cell">
